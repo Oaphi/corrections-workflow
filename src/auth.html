@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Authorize</title>
+
+        <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"
+        ></script>
+        <script src="https://api.trello.com/1/client.js?key=dc542b99e7c86e8f9f3caa419303d04d"></script>
+    </head>
+
+    <body>
+        <button id="auth" type="button"> Authorize </button>
+
+        <script>
+            window.addEventListener("load", () => {
+                const btn = document.getElementById("auth");
+
+                const authorize = () => {
+                    Trello.authorize({
+                        type: "popup",
+                        name: "Corrections Workflow",
+                        scope: {
+                            read: "true",
+                            write: "true",
+                        },
+                        expiration: "never",
+                        success: () => {
+                            const token = Trello.token();
+
+                            console.debug({ token });
+
+                            google.script.run
+                                .withFailureHandler((err) => {
+                                    console.debug(err);
+                                })
+                                .withSuccessHandler(() => {
+                                    btn.textContent = "Close";
+                                    btn.removeEventListener("click", authorize);
+                                    btn.addEventListener("click", () => window.top.close());
+                                })
+                                .setTrelloToken(token);
+                        },
+                        error: (err) => {
+                            console.debug(err);
+                        },
+                    })
+                };
+
+                btn.addEventListener("click", authorize);
+            });
+        </script>
+    </body>
+</html>

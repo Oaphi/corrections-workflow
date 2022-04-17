@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "noEmit": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "skipLibCheck": true,
+        "moduleResolution": "node",
+        "lib": [
+            "ESNext"
+        ],
+        "module": "none",
+        "target": "es2019"
+    },
+    "include": [
+        "src"
+    ],
+    "exclude": [
+        "test"
+    ]
+}

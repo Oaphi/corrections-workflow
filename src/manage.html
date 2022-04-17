@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Manage</title>
+    </head>
+
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+        }
+    </style>
+
+    <body>
+        <h2>Processed Items</h2>
+        <ul id="processed"></ul>
+
+        <h2>Board Cards</h2>
+        <table id="cards">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <h2>Board Lists</h2>
+        <table id="lists">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <h2>Webhooks</h2>
+        <table id="webhooks">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Desc</th>
+                    <th>URL</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <script>
+            window.addEventListener("load", () => {
+                /** @type {string[]} */
+                const processed = JSON.parse("<?= processed ?>");
+
+                const itemsReport = document.getElementById("processed");
+                if (!itemsReport) {
+                    console.debug("missing report list");
+                    return;
+                }
+
+                const items = processed.map((id) => {
+                    const li = document.createElement("li");
+
+                    const link = document.createElement("a");
+                    link.href = "https://docs.google.com/document/d/"+id+"/edit";
+                    link.target = "_blank";
+                    link.textContent = id;
+                    li.append(link);
+
+                    return li;
+                });
+
+                itemsReport.append(...items);
+
+                const cardsReport = document.getElementById("cards");
+                if (!cardsReport) {
+                    console.debug("missing cards report table");
+                    return;
+                }
+
+                const cardsBody = cardsReport.querySelector("tbody");
+
+                /** @type {object[]} */
+                const cards = JSON.parse("<?= cards ?>");
+
+                const rows = cards.map(({ name, url }) => {
+                    const row = document.createElement("tr");
+
+                    const ncell = document.createElement("td");
+
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.target = "_blank";
+                    link.textContent = name;
+                    ncell.append(link);
+
+                    row.append(ncell);
+                    return row;
+                });
+
+                cardsBody.append(...rows);
+
+                const listsReport = document.getElementById("lists");
+                if (!listsReport) {
+                    console.debug("missing lists report table");
+                    return;
+                }
+
+                const listsBody = listsReport.querySelector("tbody");
+
+                /** @type {object[]} */
+                const lists = JSON.parse("<?= lists ?>");
+
+                const listsRows = lists.map(({ name, id }) => {
+                    const row = document.createElement("tr");
+
+                    const idcell = document.createElement("td");
+                    idcell.textContent = id;
+
+                    const ncell = document.createElement("td");
+                    ncell.textContent = name;
+
+                    row.append(idcell, ncell);
+                    return row;
+                });
+
+                listsBody.append(...listsRows);
+
+                const whReport = document.getElementById("webhooks");
+                if (!whReport) {
+                    console.debug("missing webhooks report table");
+                    return;
+                }
+
+                const whBody = whReport.querySelector("tbody");
+
+                /** @type {object[]} */
+                const webhooks = JSON.parse("<?= webhooks ?>");
+
+                const whRows = webhooks.map(({ description, id, callbackURL }) => {
+                    const row = document.createElement("tr");
+
+                    const idcell = document.createElement("td");
+                    idcell.textContent = id;
+
+                    const desccell = document.createElement("td");
+                    desccell.textContent = description;
+
+                    const urlcell = document.createElement("td");
+                    urlcell.textContent = callbackURL;
+
+                    const actioncell = document.createElement("td");
+
+                    const delWHbutton = document.createElement("button");
+                    delWHbutton.type = "button";
+                    delWHbutton.textContent = "delete";
+                    delWHbutton.addEventListener("click", () => {
+                        google.script.run
+                            .withSuccessHandler((status) => {
+                                console.debug({ status });
+                                if(status) row.remove();
+                            })
+                            .removeTrelloWebhook(id)
+                    });
+                    actioncell.append(delWHbutton);
+
+                    row.append(idcell, desccell, urlcell, actioncell);
+                    return row;
+                });
+
+                whBody.append(...whRows);
+            });
+        </script>
+    </body>
+</html>
