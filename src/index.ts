@@ -91,109 +91,107 @@ const processNewItems = () => {
     }
 
     const cloudConvertTasks = getCloudConvertTasksInfo();
+    const pagesFiles = getPagesFiles(folderId);
+
+    pagesFiles.forEach((file, itemId) => {
+        try {
+            const tasksInfo = cloudConvertTasks.get(itemId) || {};
+
+            const { importId = "", exportId = "", convertId = "" } = tasksInfo;
+
+            if (!importId) {
+                const importTask = createImportBase64Task(file);
+                if (!importTask) return;
+                tasksInfo.importId = importTask.id;
+                cloudConvertTasks.set(itemId, tasksInfo);
+                console.log(`[${itemId}] importing item`);
+                return;
+            }
+
+            const importTask = readTask(importId);
+            if (importTask?.status !== "finished") {
+                console.log(`[${itemId}] import status: ${importTask?.status}`);
+
+                if (importTask?.status === "error") {
+                    tasksInfo.importId = retryTask(importId)?.id;
+                    console.log(`[${itemId}] retrying import task`);
+                }
+
+                return;
+            }
+
+            if (!convertId) {
+                const convertTask = createConvertTask(importId, "docx");
+                if (!convertTask) return;
+                tasksInfo.convertId = convertTask.id;
+                cloudConvertTasks.set(itemId, tasksInfo);
+                console.log(`[${itemId}] converting item`);
+                return;
+            }
+
+            const convertTask = readTask(convertId);
+            if (convertTask?.status !== "finished") {
+                console.log(`[${itemId}] conversion status: ${convertTask?.status}`);
+
+                if (convertTask?.status === "error") {
+                    tasksInfo.convertId = retryTask(convertId)?.id;
+                    console.log(`[${itemId}] retrying convert task`);
+                }
+
+                return;
+            }
+
+            if (!exportId) {
+                const exportTask = createExportUrlTask(convertId);
+                if (!exportTask) return;
+                tasksInfo.exportId = exportTask.id;
+                cloudConvertTasks.set(itemId, tasksInfo);
+                console.log(`[${itemId}] exporting item`);
+                return;
+            }
+
+            const exportTask = readTask<CloudConvert.ExportUrlTask>(exportId);
+            if (exportTask?.status !== "finished") {
+                console.log(`[${itemId}] export status: ${exportTask?.status}`);
+
+                if (exportTask?.status === "error") {
+                    tasksInfo.exportId = retryTask(exportId)?.id;
+                    console.log(`[${itemId}] retrying export task`);
+                }
+
+                return;
+            }
+
+            const { result: { files: [{ url, filename }] } } = exportTask;
+
+            const res = UrlFetchApp.fetch(url);
+            if (res.getResponseCode() !== 200) {
+                console.log(`[${itemId}] failed to get converted item`);
+                return;
+            }
+
+            const blob = res.getBlob();
+
+            const gdoc = Drive.Files?.insert({
+                title: filename.replace(/\.\w+?$/, ""),
+                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                parents: [{ id: folderId }]
+            }, blob);
+
+            if (!gdoc) return;
+
+            Drive.Files?.remove(itemId);
+        } catch (error) {
+            console.log(`[${itemId}] fatal error ${error}`);
+        }
+    });
+
+    setCloudConvertTasksInfo(cloudConvertTasks);
 
     const newlyProcessedIds = filterSet(unprocessedIds, (itemId) => {
         try {
             const file = DriveApp.getFileById(itemId);
             const mime = file.getMimeType();
-
-            if (mime === "application/x-iwork-pages-sffpages") {
-                const tasksInfo = cloudConvertTasks.get(itemId) || {};
-
-                const { importId = "", exportId = "", convertId = "" } = tasksInfo;
-
-                // wait for next run after setting link access to allow the change to propagate
-                if (file.getSharingAccess() !== DriveApp.Access.ANYONE_WITH_LINK) {
-                    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-                    console.log(`[${itemId}] set link access`);
-                    return false;
-                }
-
-                if (!importId) {
-                    const importTask = createImportBase64Task(file);
-                    if (!importTask) return false;
-                    tasksInfo.importId = importTask.id;
-                    cloudConvertTasks.set(itemId, tasksInfo);
-                    console.log(`[${itemId}] importing item`);
-                    return false;
-                }
-
-                const importTask = readTask(importId);
-                if (importTask?.status !== "finished") {
-                    console.log(`[${itemId}] import status: ${importTask?.status}`);
-
-                    if (importTask?.status === "error") {
-                        tasksInfo.importId = retryTask(importId)?.id;
-                        console.log(`[${itemId}] retrying import task`);
-                    }
-
-                    return false;
-                }
-
-                if (!convertId) {
-                    const convertTask = createConvertTask(importId, "docx");
-                    if (!convertTask) return false;
-                    tasksInfo.convertId = convertTask.id;
-                    cloudConvertTasks.set(itemId, tasksInfo);
-                    console.log(`[${itemId}] converting item`);
-                    return false;
-                }
-
-                const convertTask = readTask(convertId);
-                if (convertTask?.status !== "finished") {
-                    console.log(`[${itemId}] conversion status: ${convertTask?.status}`);
-
-                    if (convertTask?.status === "error") {
-                        tasksInfo.convertId = retryTask(convertId)?.id;
-                        console.log(`[${itemId}] retrying convert task`);
-                    }
-
-                    return false;
-                }
-
-                if (!exportId) {
-                    const exportTask = createExportUrlTask(convertId);
-                    if (!exportTask) return false;
-                    tasksInfo.exportId = exportTask.id;
-                    cloudConvertTasks.set(itemId, tasksInfo);
-                    console.log(`[${itemId}] exporting item`);
-                    return false;
-                }
-
-                const exportTask = readTask<CloudConvert.ExportUrlTask>(exportId);
-                if (exportTask?.status !== "finished") {
-                    console.log(`[${itemId}] export status: ${exportTask?.status}`);
-
-                    if (exportTask?.status === "error") {
-                        tasksInfo.exportId = retryTask(exportId)?.id;
-                        console.log(`[${itemId}] retrying export task`);
-                    }
-
-                    return false;
-                }
-
-                const { result: { files: [{ url, filename }] } } = exportTask;
-
-                const res = UrlFetchApp.fetch(url);
-                if (res.getResponseCode() !== 200) {
-                    console.log(`[${itemId}] failed to get converted item`);
-                    return false;
-                }
-
-                const blob = res.getBlob();
-
-                const gdoc = Drive.Files?.insert({
-                    title: filename.replace(/\.\w+?$/, ""),
-                    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    parents: [{ id: folderId }]
-                }, blob);
-
-                if (!gdoc) return false;
-
-                Drive.Files?.remove(itemId);
-
-                return false;
-            }
 
             if (!mimes.has(mime)) return false;
 
@@ -225,8 +223,6 @@ const processNewItems = () => {
             return false;
         }
     });
-
-    setCloudConvertTasksInfo(cloudConvertTasks);
 
     const updatedIds = mergeSets(processedIds, newlyProcessedIds);
 
