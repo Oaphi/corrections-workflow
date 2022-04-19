@@ -28,6 +28,14 @@ declare namespace CloudConvert {
     }
 
     /**
+     * {@see https://cloudconvert.com/api/v2/import#import-base64-tasks}
+     */
+    interface ImportBase64Payload {
+        file: string;
+        filename: string;
+    }
+
+    /**
      * {@see https://cloudconvert.com/api/v2/import#import-url-tasks}
      */
     interface ImportUrlTaskPayload {
@@ -144,6 +152,29 @@ const createImportUrlTask = (file: GoogleAppsScript.Drive.File): CloudConvert.Ta
 
     return parseCloudConvertResponse(res, 201);
 };
+
+/**
+ * {@see https://cloudconvert.com/api/v2/import#import-base64-tasks}
+ */
+const createImportBase64Task = (file: GoogleAppsScript.Drive.File): CloudConvert.Task | undefined => {
+    const token = getCloudConvertToken();
+
+    const payload: CloudConvert.ImportBase64Payload = {
+        file: Utilities.base64Encode(file.getBlob().getBytes()),
+        filename: file.getName(),
+    };
+
+    const res = UrlFetchApp.fetch(`${cloudConvertApiBase}/import/base64`, {
+        method: "post",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        payload: JSON.stringify(payload)
+    });
+
+    return parseCloudConvertResponse(res, 201);
+}
 
 /**
  * {@see https://cloudconvert.com/api/v2/tasks#tasks-show}
