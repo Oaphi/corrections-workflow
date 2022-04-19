@@ -210,3 +210,20 @@ const createExportUrlTask = (importTaskId: string): CloudConvert.ExportUrlTask |
     const { data } = JSON.parse(res.getContentText());
     return data;
 };
+
+/**
+ * {@see https://cloudconvert.com/api/v2/tasks#tasks-retry}
+ */
+const retryTask = <T extends CloudConvert.Task>(id: string): T | undefined => {
+    const token = getCloudConvertToken();
+
+    const res = UrlFetchApp.fetch(`${cloudConvertApiBase}/tasks/${id}/retry`, {
+        method: "post",
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (res.getResponseCode() !== 201) return;
+
+    const { data } = JSON.parse(res.getContentText());
+    return data;
+};
