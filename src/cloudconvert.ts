@@ -116,6 +116,12 @@ const setCloudConvertToken = (token: string): boolean => {
     }
 };
 
+const parseCloudConvertResponse = <T>(res: GoogleAppsScript.URL_Fetch.HTTPResponse, successCode = 200): T | undefined => {
+    if (res.getResponseCode() !== successCode) return;
+    const { data }: { data: T; } = JSON.parse(res.getContentText());
+    return data;
+};
+
 /**
  * {@see https://cloudconvert.com/api/v2/import#import-url-tasks}
  */
@@ -136,10 +142,7 @@ const createImportUrlTask = (file: GoogleAppsScript.Drive.File): CloudConvert.Ta
         payload: JSON.stringify(payload)
     });
 
-    if (res.getResponseCode() !== 201) return;
-
-    const { data } = JSON.parse(res.getContentText());
-    return data;
+    return parseCloudConvertResponse(res, 201);
 };
 
 /**
@@ -152,10 +155,7 @@ const readTask = <T extends CloudConvert.Task>(id: string): T | undefined => {
         headers: { "Authorization": `Bearer ${token}` }
     });
 
-    if (res.getResponseCode() !== 200) return;
-
-    const { data } = JSON.parse(res.getContentText());
-    return data;
+    return parseCloudConvertResponse(res);
 };
 
 /**
@@ -178,10 +178,7 @@ const createConvertTask = (importTaskId: string, format: CloudConvert.SupportedC
         payload: JSON.stringify(payload)
     });
 
-    if (res.getResponseCode() !== 201) return;
-
-    const { data } = JSON.parse(res.getContentText());
-    return data;
+    return parseCloudConvertResponse(res, 201);
 };
 
 /**
@@ -205,10 +202,7 @@ const createExportUrlTask = (importTaskId: string): CloudConvert.ExportUrlTask |
         payload: JSON.stringify(payload)
     });
 
-    if (res.getResponseCode() !== 201) return;
-
-    const { data } = JSON.parse(res.getContentText());
-    return data;
+    return parseCloudConvertResponse(res, 201);
 };
 
 /**
@@ -222,8 +216,5 @@ const retryTask = <T extends CloudConvert.Task>(id: string): T | undefined => {
         headers: { "Authorization": `Bearer ${token}` }
     });
 
-    if (res.getResponseCode() !== 201) return;
-
-    const { data } = JSON.parse(res.getContentText());
-    return data;
+    return parseCloudConvertResponse(res, 201);
 };
