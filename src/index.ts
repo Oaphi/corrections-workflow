@@ -85,6 +85,13 @@ const processNewItems = () => {
 
                 const { importUrlId = "", exportUrlId = "", convertId = "" } = tasksInfo;
 
+                // wait for next run after setting link access to allow the change to propagate
+                if (file.getSharingAccess() !== DriveApp.Access.ANYONE_WITH_LINK) {
+                    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+                    console.log(`[${itemId}] set link access`);
+                    return false;
+                }
+
                 if (!importUrlId) {
                     const importTask = createImportUrlTask(file);
                     if (!importTask) return false;

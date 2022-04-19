@@ -127,8 +127,6 @@ const createImportUrlTask = (file: GoogleAppsScript.Drive.File): CloudConvert.Ta
         url: file.getDownloadUrl(),
     };
 
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
     const res = UrlFetchApp.fetch(`${cloudConvertApiBase}/import/url`, {
         method: "post",
         headers: {
