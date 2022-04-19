@@ -104,6 +104,12 @@ const processNewItems = () => {
                 const importTask = readTask(importUrlId);
                 if (importTask?.status !== "finished") {
                     console.log(`[${itemId}] import status: ${importTask?.status}`);
+
+                    if (importTask?.status === "error") {
+                        tasksInfo.importUrlId = retryTask(importUrlId)?.id;
+                        console.log(`[${itemId}] retrying import task`);
+                    }
+
                     return false;
                 }
 
@@ -119,6 +125,12 @@ const processNewItems = () => {
                 const convertTask = readTask(convertId);
                 if (convertTask?.status !== "finished") {
                     console.log(`[${itemId}] conversion status: ${convertTask?.status}`);
+
+                    if (convertTask?.status === "error") {
+                        tasksInfo.convertId = retryTask(convertId)?.id;
+                        console.log(`[${itemId}] retrying convert task`);
+                    }
+
                     return false;
                 }
 
@@ -134,6 +146,12 @@ const processNewItems = () => {
                 const exportTask = readTask<CloudConvert.ExportUrlTask>(exportUrlId);
                 if (exportTask?.status !== "finished") {
                     console.log(`[${itemId}] export status: ${exportTask?.status}`);
+
+                    if (exportTask?.status === "error") {
+                        tasksInfo.exportUrlId = retryTask(exportUrlId)?.id;
+                        console.log(`[${itemId}] retrying export task`);
+                    }
+
                     return false;
                 }
 
