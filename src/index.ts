@@ -1,6 +1,23 @@
 
 type ProcessedItemIds = string[];
 
+/**
+ * @summary gets .pages {@link GoogleAppsScript.Drive.File}s in a given folder
+ * @param folderId folder id to lookup
+ */
+const getPagesFiles = (folderId: string): Map<string, GoogleAppsScript.Drive.File> => {
+    const pages = new Map<string, GoogleAppsScript.Drive.File>();
+
+    const folder = DriveApp.getFolderById(folderId);
+
+    const files = folder.getFilesByType("application/x-iwork-pages-sffpages");
+    while (files.hasNext()) {
+        const file = files.next();
+        pages.set(file.getId(), file);
+    }
+
+    return pages;
+};
 
 const getParentIds = (file: GoogleAppsScript.Drive.File): Set<string> => {
     const ids = new Set<string>();
