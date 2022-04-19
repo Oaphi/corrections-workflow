@@ -136,7 +136,7 @@ const createImportUrlTask = (file: GoogleAppsScript.Drive.File): CloudConvert.Ta
         payload: JSON.stringify(payload)
     });
 
-    if (res.getResponseCode() !== 200) return;
+    if (res.getResponseCode() !== 201) return;
 
     const { data } = JSON.parse(res.getContentText());
     return data;
@@ -178,7 +178,7 @@ const createConvertTask = (importTaskId: string, format: CloudConvert.SupportedC
         payload: JSON.stringify(payload)
     });
 
-    if (res.getResponseCode() !== 200) return;
+    if (res.getResponseCode() !== 201) return;
 
     const { data } = JSON.parse(res.getContentText());
     return data;
@@ -205,7 +205,7 @@ const createExportUrlTask = (importTaskId: string): CloudConvert.ExportUrlTask |
         payload: JSON.stringify(payload)
     });
 
-    if (res.getResponseCode() !== 200) return;
+    if (res.getResponseCode() !== 201) return;
 
     const { data } = JSON.parse(res.getContentText());
     return data;
