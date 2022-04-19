@@ -81,8 +81,8 @@ declare namespace CloudConvert {
 const cloudConvertApiBase = "https://api.cloudconvert.com/v2";
 
 type ItemConvertTaskInfo = {
-    importUrlId?: string;
-    exportUrlId?: string;
+    importId?: string;
+    exportId?: string;
     convertId?: string;
 };
 

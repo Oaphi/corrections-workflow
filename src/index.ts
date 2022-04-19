@@ -83,7 +83,7 @@ const processNewItems = () => {
             if (mime === "application/x-iwork-pages-sffpages") {
                 const tasksInfo = cloudConvertTasks.get(itemId) || {};
 
-                const { importUrlId = "", exportUrlId = "", convertId = "" } = tasksInfo;
+                const { importId = "", exportId = "", convertId = "" } = tasksInfo;
 
                 // wait for next run after setting link access to allow the change to propagate
                 if (file.getSharingAccess() !== DriveApp.Access.ANYONE_WITH_LINK) {
@@ -92,21 +92,21 @@ const processNewItems = () => {
                     return false;
                 }
 
-                if (!importUrlId) {
-                    const importTask = createImportUrlTask(file);
+                if (!importId) {
+                    const importTask = createImportBase64Task(file);
                     if (!importTask) return false;
-                    tasksInfo.importUrlId = importTask.id;
+                    tasksInfo.importId = importTask.id;
                     cloudConvertTasks.set(itemId, tasksInfo);
                     console.log(`[${itemId}] importing item`);
                     return false;
                 }
 
-                const importTask = readTask(importUrlId);
+                const importTask = readTask(importId);
                 if (importTask?.status !== "finished") {
                     console.log(`[${itemId}] import status: ${importTask?.status}`);
 
                     if (importTask?.status === "error") {
-                        tasksInfo.importUrlId = retryTask(importUrlId)?.id;
+                        tasksInfo.importId = retryTask(importId)?.id;
                         console.log(`[${itemId}] retrying import task`);
                     }
 
@@ -114,7 +114,7 @@ const processNewItems = () => {
                 }
 
                 if (!convertId) {
-                    const convertTask = createConvertTask(importUrlId, "docx");
+                    const convertTask = createConvertTask(importId, "docx");
                     if (!convertTask) return false;
                     tasksInfo.convertId = convertTask.id;
                     cloudConvertTasks.set(itemId, tasksInfo);
@@ -134,21 +134,21 @@ const processNewItems = () => {
                     return false;
                 }
 
-                if (!exportUrlId) {
+                if (!exportId) {
                     const exportTask = createExportUrlTask(convertId);
                     if (!exportTask) return false;
-                    tasksInfo.exportUrlId = exportTask.id;
+                    tasksInfo.exportId = exportTask.id;
                     cloudConvertTasks.set(itemId, tasksInfo);
                     console.log(`[${itemId}] exporting item`);
                     return false;
                 }
 
-                const exportTask = readTask<CloudConvert.ExportUrlTask>(exportUrlId);
+                const exportTask = readTask<CloudConvert.ExportUrlTask>(exportId);
                 if (exportTask?.status !== "finished") {
                     console.log(`[${itemId}] export status: ${exportTask?.status}`);
 
                     if (exportTask?.status === "error") {
-                        tasksInfo.exportUrlId = retryTask(exportUrlId)?.id;
+                        tasksInfo.exportId = retryTask(exportId)?.id;
                         console.log(`[${itemId}] retrying export task`);
                     }
 
