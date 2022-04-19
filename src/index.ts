@@ -97,38 +97,53 @@ const processNewItems = () => {
                     if (!importTask) return false;
                     tasksInfo.importUrlId = importTask.id;
                     cloudConvertTasks.set(itemId, tasksInfo);
+                    console.log(`[${itemId}] importing item`);
                     return false;
                 }
 
                 const importTask = readTask(importUrlId);
-                if (importTask?.status !== "finished") return false;
+                if (importTask?.status !== "finished") {
+                    console.log(`[${itemId}] import status: ${importTask?.status}`);
+                    return false;
+                }
 
                 if (!convertId) {
                     const convertTask = createConvertTask(importUrlId, "docx");
                     if (!convertTask) return false;
                     tasksInfo.convertId = convertTask.id;
                     cloudConvertTasks.set(itemId, tasksInfo);
+                    console.log(`[${itemId}] converting item`);
                     return false;
                 }
 
                 const convertTask = readTask(convertId);
-                if (convertTask?.status !== "finished") return false;
+                if (convertTask?.status !== "finished") {
+                    console.log(`[${itemId}] conversion status: ${convertTask?.status}`);
+                    return false;
+                }
 
                 if (!exportUrlId) {
                     const exportTask = createExportUrlTask(convertId);
                     if (!exportTask) return false;
                     tasksInfo.exportUrlId = exportTask.id;
                     cloudConvertTasks.set(itemId, tasksInfo);
+                    console.log(`[${itemId}] exporting item`);
                     return false;
                 }
 
                 const exportTask = readTask<CloudConvert.ExportUrlTask>(exportUrlId);
-                if (exportTask?.status !== "finished") return false;
+                if (exportTask?.status !== "finished") {
+                    console.log(`[${itemId}] export status: ${exportTask?.status}`);
+                    return false;
+                }
 
                 const { result: { files: [{ url, filename }] } } = exportTask;
 
                 const res = UrlFetchApp.fetch(url);
-                if (res.getResponseCode() !== 200) return false;
+                if (res.getResponseCode() !== 200) {
+                    console.log(`[${itemId}] failed to get converted item`);
+                    return false;
+                }
 
                 const blob = res.getBlob();
 
