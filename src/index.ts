@@ -165,11 +165,15 @@ const processNewItems = () => {
 
                 const blob = res.getBlob();
 
-                Drive.Files?.insert({
+                const gdoc = Drive.Files?.insert({
                     title: filename.replace(/\.\w+?$/, ""),
                     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     parents: [{ id: folderId }]
                 }, blob);
+
+                if (!gdoc) return false;
+
+                Drive.Files?.remove(itemId);
 
                 return false;
             }
