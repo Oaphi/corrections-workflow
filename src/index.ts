@@ -85,6 +85,26 @@ const getItemIds = (folderId: string): Set<string> => {
     return ids;
 };
 
+const processReadyItems = () => {
+    const cards = getTrelloCards(trelloBoardId);
+    if (!cards.length) {
+        console.log(`[trello-api] failed get Trello cards`);
+        return;
+    }
+
+    const ids = getItemIds(folderId);
+
+    ids.forEach((fileId) => {
+        const card = cards.find(({ desc }) => desc.includes(fileId));
+        if (!card) return;
+
+        const { items = [] } = Drive.Comments?.list(fileId) || {};
+        if (items.length) return;
+
+        moveTrelloCard(card.id, doneListId);
+    });
+};
+
 const processNewItems = () => {
     const key = "processed_items";
 
