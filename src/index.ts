@@ -46,6 +46,26 @@ const convertToDocs = (file: GoogleAppsScript.Drive.File): string | undefined =>
 };
 
 /**
+ * @summary gets items in a given folder
+ * @param folderId folder id to lookup
+ */
+const getItems = (folderId: string): Map<string, GoogleAppsScript.Drive.File> => {
+    const folder = DriveApp.getFolderById(folderId);
+
+    const files = folder.getFiles();
+
+    const items: Map<string, GoogleAppsScript.Drive.File> = new Map();
+
+    while (files.hasNext()) {
+        const file = files.next();
+        const fileId = file.getId();
+        items.set(fileId, file);
+    }
+
+    return items;
+}
+
+/**
  * @summary gets item ids in a given folder
  * @param folderId folder id to lookup
  */
