@@ -95,6 +95,21 @@ const addTrelloCard = (payload: Trello.CardPayload): Trello.Card | undefined => 
 };
 
 /**
+ * {@see https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-put}
+ */
+const moveTrelloCard = (cardId: string, listId: string): boolean => {
+    const token = getTrelloToken();
+
+    const res = UrlFetchApp.fetch(`${trelloApiBase}/cards/${cardId}?key=${trelloApiKey}`, {
+        method: "put",
+        payload: { idList: listId },
+        headers: getTrelloAuthHeader(trelloApiKey, token)
+    });
+
+    return res.getResponseCode() === 200;
+};
+
+/**
  * {@see https://developer.atlassian.com/cloud/trello/rest/api-group-webhooks/#api-webhooks-post}
  */
 const addTrelloWebhook = (payload: Trello.WebhookPayload): Trello.Webhook | undefined => {
