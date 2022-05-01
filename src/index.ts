@@ -98,6 +98,9 @@ const processReadyItems = () => {
         const card = cards.find(({ desc }) => desc.includes(fileId));
         if (!card) return;
 
+        const { idList } = card;
+        if (idList !== reviewListId) return;
+
         const { items = [] } = Drive.Comments?.list(fileId) || {};
         if (items.length) return;
 
