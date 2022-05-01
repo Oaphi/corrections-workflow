@@ -233,31 +233,36 @@ const processNewItems = () => {
             const file = DriveApp.getFileById(itemId);
             const mime = file.getMimeType();
 
-            if (!mimes.has(mime)) return false;
+            if (mime === "application/vnd.google-apps.document") {
+                const itemCard = cards.find(({ desc }) => desc.includes(`/d/${itemId}`));
+                if (itemCard) {
+                    console.log(`[${itemId}] Trello card for the item exists`);
+                    return true;
+                }
 
-            const fileId = convertToDocs(file);
-            if (!fileId) return false;
+                const newCard = addTrelloCard({
+                    idList: todoListId,
+                    desc: `https://docs.google.com/document/d/${itemId}/edit`,
+                    name: file.getName().replace(/\.\w+?$/, "")
+                });
 
-            Drive.Files?.remove(itemId);
+                if (!newCard) {
+                    console.log(`[${itemId}] failed to add Trello card`);
+                    return false;
+                }
 
-            const itemCard = cards.find(({ desc }) => desc.includes(`/d/${itemId}`));
-            if (itemCard) {
-                console.log(`[${fileId}] Trello card for the item exists`);
-                return false;
+                return true;
             }
 
-            const newCard = addTrelloCard({
-                idList: todoListId,
-                desc: `https://docs.google.com/document/d/${fileId}/edit`,
-                name: file.getName().replace(/\.\w+?$/, "")
-            });
+            if (mimes.has(mime)) {
+                const fileId = convertToDocs(file);
+                if (!fileId) return false;
 
-            if (!newCard) {
-                console.log(`[${fileId}] failed to add Trello card`);
-                return false;
+                Drive.Files?.remove(itemId);
+                return true;
             }
 
-            return true;
+            return false;
         } catch (error) {
             console.log(`[failure] ${error}`);
             return false;
