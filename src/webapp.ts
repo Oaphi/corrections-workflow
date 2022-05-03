@@ -48,6 +48,36 @@ const doPost = ({ postData, parameter }: GoogleAppsScript.Events.DoPost): undefi
     const { webhook } = parameter;
     const { contents } = postData;
 
+    if (webhook === "progress") {
+        try {
+            const response: Trello.WebhookResponse = JSON.parse(contents);
+
+            const { action: { type, data, display } } = response;
+
+            if (type !== "updateCard" || data.listAfter.id !== progressListModelId) return;
+
+            const { entities: { card: { text, id } } } = display;
+
+            const recipient = getReviewRecipient();
+            if (!recipient) return;
+
+            const subject = `[в работе] ${text}`;
+
+            const card = getTrelloCard(id);
+            if (!card) return;
+
+            const { desc, name } = card;
+
+            GmailApp.sendEmail(recipient, subject, "", {
+                htmlBody: `
+<p>Cтатья "${name}" в <a href="${desc}" target="_blank">работе</a></p>
+${makeEmailSignature()}`
+            });
+        } catch (error) {
+            console.log(`[webhook]\n${error}`);
+        }
+    }
+
     // TODO: expand
     if (webhook === "review") {
         try {
@@ -55,7 +85,7 @@ const doPost = ({ postData, parameter }: GoogleAppsScript.Events.DoPost): undefi
 
             const { action: { type, data, display } } = response;
 
-            if (type === "updateCard" && data.listAfter.id === "61b9a7bb1b23a22610ed26f9") {
+            if (type === "updateCard" && data.listAfter.id === reviewListModelId) {
                 const { entities: { card: { text, id } } } = display;
 
                 const recipient = getReviewRecipient();
@@ -70,12 +100,8 @@ const doPost = ({ postData, parameter }: GoogleAppsScript.Events.DoPost): undefi
 
                 GmailApp.sendEmail(recipient, subject, "", {
                     htmlBody: `
-<p>
-    Корректура статьи "${name}" готова к <a href="${desc}" target="_blank">ревью</a>
-</p>
-<p>
-    WR, Олег
-</p>`
+<p>Корректура статьи "${name}" готова к <a href="${desc}" target="_blank">ревью</a></p>
+${makeEmailSignature()}`
                 });
             }
 

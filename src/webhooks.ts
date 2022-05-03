@@ -1,7 +1,15 @@
-const installInReviewHook = () => {
-    addTrelloWebhook({
-        callbackURL: `${getWebAppUrl()}?webhook=review`,
-        description: "Sends an email when an item is moved to the 'In Review' column",
-        idModel: "61b9a7bb1b23a22610ed26f9"
+type TrelloWebhookType = "review" | "progress";
+
+const installTrelloWebhook = (type: TrelloWebhookType) => {
+
+    const idModelMap: Record<TrelloWebhookType, string> = {
+        review: reviewListModelId,
+        progress: progressListModelId
+    };
+
+    return addTrelloWebhook({
+        callbackURL: `${getWebAppUrl()}?webhook=${type}`,
+        description: `Sends an email when an item is moved to the '${type}' column`,
+        idModel: idModelMap[type]
     });
 };

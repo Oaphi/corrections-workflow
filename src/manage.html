@@ -54,6 +54,11 @@
             </thead>
             <tbody></tbody>
         </table>
+        <select name="webhook-type" id="webhook-type">
+            <option value="progress">Progress</option>
+            <option value="review">Review</option>
+        </select>
+        <button id="webhooks-install" type="button">Install</button>
 
         <script>
             window.addEventListener("load", () => {
@@ -145,7 +150,7 @@
                 /** @type {object[]} */
                 const webhooks = JSON.parse("<?= webhooks ?>");
 
-                const whRows = webhooks.map(({ description, id, callbackURL }) => {
+                const makeWebhookRow = ({ description, id, callbackURL }) => {
                     const row = document.createElement("tr");
 
                     const idcell = document.createElement("td");
@@ -174,9 +179,30 @@
 
                     row.append(idcell, desccell, urlcell, actioncell);
                     return row;
-                });
+                };
+
+                const whRows = webhooks.map(makeWebhookRow);
 
                 whBody.append(...whRows);
+
+                const installBtn = document.getElementById("webhooks-install");
+                installBtn?.addEventListener("click", () => {
+                    const typeSelect = document.getElementById("webhook-type");
+                    if(!typeSelect) return;
+
+                    const { value } = typeSelect;
+
+                    google.script.run
+                        .withSuccessHandler((webhook) => {
+                            if(!webhook) {
+                                console.debug("failed to install webhook");
+                                return;
+                            }
+
+                            whBody.append(makeWebhookRow(webhook));
+                        })
+                        .installTrelloWebhook(value);
+                });
             });
         </script>
     </body>
