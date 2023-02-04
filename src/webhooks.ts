@@ -7,8 +7,10 @@ const installTrelloWebhook = (type: TrelloWebhookType) => {
         progress: progressListModelId
     };
 
+    const callbackURL = `${getWebAppUrl()}?webhook=${type}`;
+
     return addTrelloWebhook({
-        callbackURL: `${getWebAppUrl()}?webhook=${type}`,
+        callbackURL,
         description: `Sends an email when an item is moved to the '${type}' column`,
         idModel: idModelMap[type]
     });
