@@ -1,5 +1,10 @@
 const getWebAppUrl = () => ScriptApp.getService().getUrl() || "";
 
+const getWebhookResponseAction = (body: string) => {
+    const { action }: Trello.WebhookResponse = JSON.parse(body);
+    return action
+}
+
 const doGet = ({ parameter }: GoogleAppsScript.Events.DoGet) => {
     const { path, pwd } = parameter;
 
@@ -50,9 +55,7 @@ const doPost = ({ postData, parameter }: GoogleAppsScript.Events.DoPost): undefi
 
     if (webhook === "progress") {
         try {
-            const response: Trello.WebhookResponse = JSON.parse(contents);
-
-            const { action: { type, data, display } } = response;
+            const { type, data, display } = getWebhookResponseAction(contents);
 
             if (type !== "updateCard" || data.listAfter.id !== progressListModelId) return;
 
@@ -81,9 +84,7 @@ ${makeEmailSignature()}`
     // TODO: expand
     if (webhook === "review") {
         try {
-            const response: Trello.WebhookResponse = JSON.parse(contents);
-
-            const { action: { type, data, display } } = response;
+            const { type, data, display } = getWebhookResponseAction(contents);
 
             if (type === "updateCard" && data.listAfter.id === reviewListModelId) {
                 const { entities: { card: { text, id } } } = display;
