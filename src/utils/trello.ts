@@ -25,7 +25,10 @@ const getTrelloBoard = (id: string): Trello.Board | undefined => {
         }
     );
 
-    if (res.getResponseCode() !== 200) return;
+    if (res.getResponseCode() !== 200) {
+        processAPIError(res);
+        return;
+    }
 
     return JSON.parse(res.getContentText());
 };
@@ -44,7 +47,10 @@ const getTrelloCard = (id: string): Trello.Card | undefined => {
         }
     );
 
-    if (res.getResponseCode() !== 200) return;
+    if (res.getResponseCode() !== 200) {
+        processAPIError(res);
+        return;
+    }
 
     return JSON.parse(res.getContentText());
 };
@@ -63,7 +69,10 @@ const getTrelloCards = (boardId: string): Trello.Card[] => {
         }
     );
 
-    if (res.getResponseCode() !== 200) return [];
+    if (res.getResponseCode() !== 200) {
+        processAPIError(res);
+        return [];
+    }
 
     return JSON.parse(res.getContentText());
 };
@@ -82,7 +91,10 @@ const getTrelloLists = (boardId: string): Trello.List[] => {
         }
     );
 
-    if (res.getResponseCode() !== 200) return [];
+    if (res.getResponseCode() !== 200) {
+        processAPIError(res);
+        return [];
+    }
 
     return JSON.parse(res.getContentText());
 };
@@ -101,7 +113,10 @@ const getTrelloWebhooks = (): Trello.Webhook[] => {
         }
     );
 
-    if (res.getResponseCode() !== 200) return [];
+    if (res.getResponseCode() !== 200) {
+        processAPIError(res);
+        return [];
+    }
 
     return JSON.parse(res.getContentText());
 };
@@ -124,7 +139,10 @@ const addTrelloCard = (
         }
     );
 
-    if (res.getResponseCode() !== 200) return;
+    if (res.getResponseCode() !== 200) {
+        processAPIError(res);
+        return;
+    }
 
     return JSON.parse(res.getContentText());
 };
@@ -145,7 +163,14 @@ const moveTrelloCard = (cardId: string, listId: string): boolean => {
         }
     );
 
-    return res.getResponseCode() === 200;
+    const success = res.getResponseCode() === 200;
+
+    if (!success) {
+        processAPIError(res);
+        return success;
+    }
+
+    return success;
 };
 
 /**
@@ -166,7 +191,10 @@ const addTrelloWebhook = (
         }
     );
 
-    if (res.getResponseCode() !== 200) return;
+    if (res.getResponseCode() !== 200) {
+        processAPIError(res);
+        return;
+    }
 
     return JSON.parse(res.getContentText());
 };
@@ -186,5 +214,12 @@ const removeTrelloWebhook = (id: string): boolean => {
         }
     );
 
-    return res.getResponseCode() === 200;
+    const success = res.getResponseCode() === 200;
+
+    if (!success) {
+        processAPIError(res);
+        return success;
+    }
+
+    return success;
 };
