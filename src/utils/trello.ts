@@ -5,21 +5,26 @@ const setTrelloToken = (token: string): void => {
     store.setProperty("trello_token", token);
 };
 
-
 const getTrelloToken = (): string => {
     const store = PropertiesService.getScriptProperties();
     return store.getProperty("trello_token") || "";
 };
 
 const getTrelloAuthHeader = (apiKey: string, apiToken: string) => ({
-    "Authorization": `OAuth oauth_consumer_key="${apiKey}", oauth_token="${apiToken}"`
+    Authorization: `OAuth oauth_consumer_key="${apiKey}", oauth_token="${apiToken}"`,
 });
 
 const getTrelloBoard = (id: string): Trello.Board | undefined => {
     const token = getTrelloToken();
     if (!token) return;
 
-    const res = UrlFetchApp.fetch(`${trelloApiBase}/boards/${id}?key=${trelloApiKey}&token=${token}`);
+    const res = UrlFetchApp.fetch(
+        `${trelloApiBase}/boards/${id}?key=${trelloApiKey}&token=${token}`,
+        {
+            muteHttpExceptions: true,
+        }
+    );
+
     if (res.getResponseCode() !== 200) return;
 
     return JSON.parse(res.getContentText());
@@ -32,7 +37,13 @@ const getTrelloCard = (id: string): Trello.Card | undefined => {
     const token = getTrelloToken();
     if (!token) return;
 
-    const res = UrlFetchApp.fetch(`${trelloApiBase}/cards/${id}?key=${trelloApiKey}&token=${token}`);
+    const res = UrlFetchApp.fetch(
+        `${trelloApiBase}/cards/${id}?key=${trelloApiKey}&token=${token}`,
+        {
+            muteHttpExceptions: true,
+        }
+    );
+
     if (res.getResponseCode() !== 200) return;
 
     return JSON.parse(res.getContentText());
@@ -45,7 +56,13 @@ const getTrelloCards = (boardId: string): Trello.Card[] => {
     const token = getTrelloToken();
     if (!token) return [];
 
-    const res = UrlFetchApp.fetch(`${trelloApiBase}/boards/${boardId}/cards?key=${trelloApiKey}&token=${token}`);
+    const res = UrlFetchApp.fetch(
+        `${trelloApiBase}/boards/${boardId}/cards?key=${trelloApiKey}&token=${token}`,
+        {
+            muteHttpExceptions: true,
+        }
+    );
+
     if (res.getResponseCode() !== 200) return [];
 
     return JSON.parse(res.getContentText());
@@ -58,7 +75,13 @@ const getTrelloLists = (boardId: string): Trello.List[] => {
     const token = getTrelloToken();
     if (!token) return [];
 
-    const res = UrlFetchApp.fetch(`${trelloApiBase}/boards/${boardId}/lists?key=${trelloApiKey}&token=${token}`);
+    const res = UrlFetchApp.fetch(
+        `${trelloApiBase}/boards/${boardId}/lists?key=${trelloApiKey}&token=${token}`,
+        {
+            muteHttpExceptions: true,
+        }
+    );
+
     if (res.getResponseCode() !== 200) return [];
 
     return JSON.parse(res.getContentText());
@@ -71,7 +94,13 @@ const getTrelloWebhooks = (): Trello.Webhook[] => {
     const token = getTrelloToken();
     if (!token) return [];
 
-    const res = UrlFetchApp.fetch(`${trelloApiBase}/tokens/${token}/webhooks?key=${trelloApiKey}&token=${token}`);
+    const res = UrlFetchApp.fetch(
+        `${trelloApiBase}/tokens/${token}/webhooks?key=${trelloApiKey}&token=${token}`,
+        {
+            muteHttpExceptions: true,
+        }
+    );
+
     if (res.getResponseCode() !== 200) return [];
 
     return JSON.parse(res.getContentText());
@@ -80,14 +109,20 @@ const getTrelloWebhooks = (): Trello.Webhook[] => {
 /**
  * {@see https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-post}
  */
-const addTrelloCard = (payload: Trello.CardPayload): Trello.Card | undefined => {
+const addTrelloCard = (
+    payload: Trello.CardPayload
+): Trello.Card | undefined => {
     const token = getTrelloToken();
 
-    const res = UrlFetchApp.fetch(`${trelloApiBase}/cards?key=${trelloApiKey}`, {
-        method: "post",
-        payload,
-        headers: getTrelloAuthHeader(trelloApiKey, token)
-    });
+    const res = UrlFetchApp.fetch(
+        `${trelloApiBase}/cards?key=${trelloApiKey}`,
+        {
+            method: "post",
+            muteHttpExceptions: true,
+            payload,
+            headers: getTrelloAuthHeader(trelloApiKey, token),
+        }
+    );
 
     if (res.getResponseCode() !== 200) return;
 
@@ -100,11 +135,15 @@ const addTrelloCard = (payload: Trello.CardPayload): Trello.Card | undefined => 
 const moveTrelloCard = (cardId: string, listId: string): boolean => {
     const token = getTrelloToken();
 
-    const res = UrlFetchApp.fetch(`${trelloApiBase}/cards/${cardId}?key=${trelloApiKey}`, {
-        method: "put",
-        payload: { idList: listId },
-        headers: getTrelloAuthHeader(trelloApiKey, token)
-    });
+    const res = UrlFetchApp.fetch(
+        `${trelloApiBase}/cards/${cardId}?key=${trelloApiKey}`,
+        {
+            method: "put",
+            muteHttpExceptions: true,
+            payload: { idList: listId },
+            headers: getTrelloAuthHeader(trelloApiKey, token),
+        }
+    );
 
     return res.getResponseCode() === 200;
 };
@@ -112,14 +151,20 @@ const moveTrelloCard = (cardId: string, listId: string): boolean => {
 /**
  * {@see https://developer.atlassian.com/cloud/trello/rest/api-group-webhooks/#api-webhooks-post}
  */
-const addTrelloWebhook = (payload: Trello.WebhookPayload): Trello.Webhook | undefined => {
+const addTrelloWebhook = (
+    payload: Trello.WebhookPayload
+): Trello.Webhook | undefined => {
     const token = getTrelloToken();
 
-    const res = UrlFetchApp.fetch(`${trelloApiBase}/webhooks?key=${trelloApiKey}`, {
-        method: "post",
-        payload,
-        headers: getTrelloAuthHeader(trelloApiKey, token)
-    });
+    const res = UrlFetchApp.fetch(
+        `${trelloApiBase}/webhooks?key=${trelloApiKey}`,
+        {
+            method: "post",
+            muteHttpExceptions: true,
+            payload,
+            headers: getTrelloAuthHeader(trelloApiKey, token),
+        }
+    );
 
     if (res.getResponseCode() !== 200) return;
 
@@ -132,10 +177,14 @@ const addTrelloWebhook = (payload: Trello.WebhookPayload): Trello.Webhook | unde
 const removeTrelloWebhook = (id: string): boolean => {
     const token = getTrelloToken();
 
-    const res = UrlFetchApp.fetch(`${trelloApiBase}/webhooks/${id}?key=${trelloApiKey}`, {
-        method: "delete",
-        headers: getTrelloAuthHeader(trelloApiKey, token)
-    });
+    const res = UrlFetchApp.fetch(
+        `${trelloApiBase}/webhooks/${id}?key=${trelloApiKey}`,
+        {
+            method: "delete",
+            muteHttpExceptions: true,
+            headers: getTrelloAuthHeader(trelloApiKey, token),
+        }
+    );
 
     return res.getResponseCode() === 200;
 };
