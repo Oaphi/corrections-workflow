@@ -1,3 +1,11 @@
+interface ProcessedItemInfo {
+    error: boolean;
+    id: string;
+    name?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 const getWebAppUrl = (): string => {
     const store = PropertiesService.getScriptProperties();
     const deploymentId = store.getProperty("deployment_id");
@@ -22,7 +30,29 @@ const doGet = ({ parameter }: GoogleAppsScript.Events.DoGet) => {
 
     if (path === "manage") {
         const template = HtmlService.createTemplateFromFile("src/manage.html");
-        template.processed = JSON.stringify([...getItemIds(folderId)]);
+
+        const processedIds = getItemIds(folderId);
+
+        const processedItems: ProcessedItemInfo[] = [];
+
+        processedIds.forEach((id) => {
+            const item: ProcessedItemInfo = { id, error: false };
+
+            try {
+                const file = DriveApp.getFileById(id);
+                item.name = file.getName();
+                item.createdAt = file.getDateCreated().toISOString();
+                item.updatedAt = file.getLastUpdated().toISOString();
+            } catch (error) {
+                console.log(error);
+                item.error = true;
+            }
+
+            processedItems.push(item);
+        });
+
+        template.processed = JSON.stringify(processedItems);
+
         template.cards = JSON.stringify(getTrelloCards(trelloBoardId));
         template.lists = JSON.stringify(getTrelloLists(trelloBoardId));
         template.webhooks = JSON.stringify(getTrelloWebhooks());

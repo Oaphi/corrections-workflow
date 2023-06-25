@@ -8,83 +8,280 @@
     </head>
 
     <style>
+        :root {
+            --border-radius: 0.25rem;
+            --color: 41, 134, 204;
+            --color-danger: 215, 0, 0;
+            --color-inverse: 255, 255, 255;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+        }
+
+        button {
+            background-color: rgb(var(--color));
+            border: none;
+            border-radius: var(--border-radius);
+            color: rgb(var(--color-inverse));
+            padding: 0.5rem;
+        }
+
+        button.danger {
+            background-color: rgb(var(--color-danger));
+        }
+
+        button:hover {
+            cursor: pointer;
+            filter: saturate(0.5);
+        }
+
+        select {
+            border-radius: var(--border-radius);
+            height: calc(2rem - 1px);
+        }
+
+        main {
+            margin-top: 4rem;
+            margin-left: 2rem;
+            margin-right: 2rem;
+        }
+
+        main > section.view {
+            max-height: calc(100vh - 8rem);
+            overflow-y: auto;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+        }
+
+        nav > ul {
+            align-items: center;
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav > ul > li {
+            background-color: rgb(var(--color-inverse));
+            color: rgb(var(--color));
+            height: 2.5rem;
+            padding: 0.5rem;
+            text-align: center;
+            white-space: nowrap;
+            width: 10rem;
+        }
+
+        nav > ul > li.selected {
+            background-color: rgb(var(--color));
+            color: rgb(var(--color-inverse));
+        }
+
         table {
             border-collapse: collapse;
         }
 
-        th, td {
+        th,
+        td {
             border: 1px solid black;
+            padding: 0.5rem;
+        }
+
+        tr.error {
+            background-color: rgba(var(--color-danger), 0.15);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .webhook-actions {
+            margin-top: 1.5rem;
         }
     </style>
 
     <body>
-        <h2>Processed Items</h2>
-        <ul id="processed"></ul>
+        <nav id="main-nav">
+            <ul>
+                <li data-view="processed" class="selected">Processed</li>
+                <li data-view="cards">Board Cards</li>
+                <li data-view="lists">Board Lists</li>
+                <li data-view="webhooks">Webhooks</li>
+            </ul>
+        </nav>
 
-        <h2>Board Cards</h2>
-        <table id="cards">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+        <main>
+            <section id="view-processed" class="view">
+                <table id="processed">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Created</th>
+                            <th>Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
 
-        <h2>Board Lists</h2>
-        <table id="lists">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Name</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+            <section id="view-cards" class="view hidden">
+                <table id="cards">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
 
-        <h2>Webhooks</h2>
-        <table id="webhooks">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Desc</th>
-                    <th>URL</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-        <select name="webhook-type" id="webhook-type">
-            <option value="done">Done</option>
-            <option value="progress">Progress</option>
-            <option value="review">Review</option>
-        </select>
-        <button id="webhooks-install" type="button">Install</button>
+            <section id="view-lists" class="view hidden">
+                <table id="lists">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+
+            <section id="view-webhooks" class="view hidden">
+                <table id="webhooks">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Desc</th>
+                            <th>URL</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <section class="webhook-actions">
+                    <select name="webhook-type" id="webhook-type">
+                        <option value="done">Done</option>
+                        <option value="progress">Progress</option>
+                        <option value="review">Review</option>
+                    </select>
+                    <button id="webhooks-install" type="button">Install</button>
+                </section>
+            </section>
+        </main>
 
         <script>
+            /**
+             * @typedef {{ id: string, error: true }} ItemError
+             * @typedef {{ id: string, error: false, name: string, createdAt: string, updatedAt: string }} ItemSuccess
+             */
+
+            /**
+             * @type {(item: ItemError|ItemSuccess) => item is ItemError}
+             */
+            const isItemError = (item) => item.error === true;
+
+            /**
+             * @param {string} timestamp
+             */
+            const timestamptToLocale = (timestamp) => {
+                return new Date(timestamp).toLocaleString();
+            };
+
             window.addEventListener("load", () => {
-                /** @type {string[]} */
+                const nav = document.getElementById("main-nav");
+
+                if (nav) {
+                    nav.addEventListener("click", ({ target }) => {
+                        if (target instanceof HTMLLIElement) {
+                            const { dataset } = target;
+                            const { view } = dataset;
+
+                            if (!view) {
+                                console.debug("no view set on item", target);
+                                return;
+                            }
+
+                            document
+                                .querySelectorAll(".view")
+                                .forEach(({ id, classList }) => {
+                                    classList.toggle(
+                                        "hidden",
+                                        !id.endsWith(view)
+                                    );
+                                });
+
+                            nav.querySelectorAll("li").forEach(
+                                ({ classList, dataset }) => {
+                                    classList.toggle(
+                                        "selected",
+                                        dataset.view === view
+                                    );
+                                }
+                            );
+                        }
+                    });
+                }
+
+                /**
+                 * @type {Array<ItemError | ItemSuccess>}
+                 */
                 const processed = JSON.parse("<?= processed ?>");
 
                 const itemsReport = document.getElementById("processed");
                 if (!itemsReport) {
-                    console.debug("missing report list");
+                    console.debug("missing report table");
                     return;
                 }
 
-                const items = processed.map((id) => {
-                    const li = document.createElement("li");
+                const itemsReportBody = itemsReport.querySelector("tbody");
+
+                const items = processed.map((item) => {
+                    const row = document.createElement("tr");
+
+                    if (isItemError(item)) {
+                        const ecell = document.createElement("td");
+                        ecell.colSpan = 3;
+                        ecell.textContent = item.id;
+
+                        row.classList.add("error");
+                        row.append(ecell);
+                        return row;
+                    }
+
+                    const ncell = document.createElement("td");
 
                     const link = document.createElement("a");
-                    link.href = "https://docs.google.com/document/d/"+id+"/edit";
+                    link.href =
+                        "https://docs.google.com/document/d/" +
+                        item.id +
+                        "edit";
                     link.target = "_blank";
-                    link.textContent = id;
-                    li.append(link);
+                    link.textContent = item.name;
+                    ncell.append(link);
 
-                    return li;
+                    const cacell = document.createElement("td");
+                    cacell.textContent = timestamptToLocale(item.createdAt);
+
+                    const uacell = document.createElement("td");
+                    uacell.textContent = timestamptToLocale(item.updatedAt);
+
+                    row.append(ncell, cacell, uacell);
+                    return row;
                 });
 
-                itemsReport.append(...items);
+                itemsReportBody.append(...items);
 
                 const cardsReport = document.getElementById("cards");
                 if (!cardsReport) {
@@ -166,15 +363,16 @@
                     const actioncell = document.createElement("td");
 
                     const delWHbutton = document.createElement("button");
+                    delWHbutton.classList.add("danger");
                     delWHbutton.type = "button";
                     delWHbutton.textContent = "delete";
                     delWHbutton.addEventListener("click", () => {
                         google.script.run
                             .withSuccessHandler((status) => {
                                 console.debug({ status });
-                                if(status) row.remove();
+                                if (status) row.remove();
                             })
-                            .removeTrelloWebhook(id)
+                            .removeTrelloWebhook(id);
                     });
                     actioncell.append(delWHbutton);
 
@@ -189,13 +387,13 @@
                 const installBtn = document.getElementById("webhooks-install");
                 installBtn?.addEventListener("click", () => {
                     const typeSelect = document.getElementById("webhook-type");
-                    if(!typeSelect) return;
+                    if (!typeSelect) return;
 
                     const { value } = typeSelect;
 
                     google.script.run
                         .withSuccessHandler((webhook) => {
-                            if(!webhook) {
+                            if (!webhook) {
                                 console.debug("failed to install webhook");
                                 return;
                             }
