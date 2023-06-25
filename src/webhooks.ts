@@ -1,17 +1,45 @@
-type TrelloWebhookType = "review" | "progress";
+type TrelloWebhookType = "review" | "progress" | "done";
 
-const installTrelloWebhook = (type: TrelloWebhookType) => {
+const getTrelloWebhookURL = (type: TrelloWebhookType): string | undefined => {
+    const store = PropertiesService.getScriptProperties();
+    const retranslatorURL = store.getProperty("retranslator_url");
 
-    const idModelMap: Record<TrelloWebhookType, string> = {
-        review: reviewListModelId,
-        progress: progressListModelId
+    if (!retranslatorURL) {
+        return;
+    }
+
+    return `${retranslatorURL}?type=${type}`;
+};
+
+const installTrelloWebhook = (
+    type: TrelloWebhookType
+): Trello.Webhook | undefined => {
+    const callbackURL = getTrelloWebhookURL(type);
+
+    if (!callbackURL) {
+        return;
+    }
+
+    const idModelMap: Record<TrelloWebhookType, [id: string, desc: string]> = {
+        done: [
+            doneListModelId,
+            `Handles an item being moved to the 'done' column`,
+        ],
+        review: [
+            reviewListModelId,
+            `Sends an email when an item is moved to the 'review' column`,
+        ],
+        progress: [
+            progressListModelId,
+            `Sends an email when an item is moved to the 'progress' column`,
+        ],
     };
 
-    const callbackURL = `${getWebAppUrl()}?webhook=${type}`;
+    const [idModel, description] = idModelMap[type];
 
     return addTrelloWebhook({
         callbackURL,
-        description: `Sends an email when an item is moved to the '${type}' column`,
-        idModel: idModelMap[type]
+        description,
+        idModel,
     });
 };

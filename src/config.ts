@@ -7,3 +7,6 @@ const trelloBoardId = "VeJIOnGZ";
 
 const progressListModelId = "61b9a7b7ac684873d202db95";
 const reviewListModelId = "61b9a7bb1b23a22610ed26f9";
+const doneListModelId = "61b9a7bc58af8417b834e911";
+
+const doneItemsDatabaseId = "162ALY4mBbCvAaEjdOn7sF1XR3YZr0jcrgLAK16s7kQA";
