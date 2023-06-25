@@ -139,6 +139,7 @@
                     <thead>
                         <tr>
                             <th>Name</th>
+                            <th>List</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -239,6 +240,12 @@
                  */
                 const processed = JSON.parse("<?= processed ?>");
 
+                /** @type {{ idList: string, name: string, url: string }[]} */
+                const cards = JSON.parse("<?= cards ?>");
+
+                /** @type {{ id: string, name: string }[]} */
+                const lists = JSON.parse("<?= lists ?>");
+
                 const itemsReport = document.getElementById("processed");
                 if (!itemsReport) {
                     console.debug("missing report table");
@@ -291,10 +298,7 @@
 
                 const cardsBody = cardsReport.querySelector("tbody");
 
-                /** @type {object[]} */
-                const cards = JSON.parse("<?= cards ?>");
-
-                const rows = cards.map(({ name, url }) => {
+                const rows = cards.map(({ idList, name, url }) => {
                     const row = document.createElement("tr");
 
                     const ncell = document.createElement("td");
@@ -305,7 +309,15 @@
                     link.textContent = name;
                     ncell.append(link);
 
-                    row.append(ncell);
+                    const list = lists.find(({ id }) => id === idList);
+
+                    const lcell = document.createElement("td");
+
+                    if (list) {
+                        lcell.textContent = list.name;
+                    }
+
+                    row.append(ncell, lcell);
                     return row;
                 });
 
@@ -318,9 +330,6 @@
                 }
 
                 const listsBody = listsReport.querySelector("tbody");
-
-                /** @type {object[]} */
-                const lists = JSON.parse("<?= lists ?>");
 
                 const listsRows = lists.map(({ name, id }) => {
                     const row = document.createElement("tr");
