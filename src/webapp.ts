@@ -98,9 +98,11 @@ const doPost = ({
 
             if (
                 type !== "updateCard" ||
-                data.listAfter.id !== progressListModelId
-            )
+                (data.listAfter.id !== progressListModelId &&
+                    data.listBefore.id !== todoListModelId)
+            ) {
                 return;
+            }
 
             const {
                 entities: {
@@ -135,7 +137,8 @@ ${makeEmailSignature()}`,
 
             if (
                 type === "updateCard" &&
-                data.listAfter.id === reviewListModelId
+                data.listAfter.id === reviewListModelId &&
+                data.listBefore.id === progressListModelId
             ) {
                 const {
                     entities: {
