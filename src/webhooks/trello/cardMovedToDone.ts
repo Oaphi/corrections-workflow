@@ -1,4 +1,9 @@
-type DoneItemsDBEntry = [card_id: string, card_name: string, doc_url: string];
+type DoneItemsDBEntry = [
+    card_id: string,
+    card_name: string,
+    card_url: string,
+    doc_url: string
+];
 
 const handleCardMovedToDone = (action: Trello.WebhookResponse["action"]) => {
     try {
@@ -12,7 +17,7 @@ const handleCardMovedToDone = (action: Trello.WebhookResponse["action"]) => {
             return;
         }
 
-        const { id: cardId, name: cardName } = data.card;
+        const { id: cardId, name: cardName, shortLink: cardUrl } = data.card;
 
         const card = getTrelloCard(cardId);
 
@@ -43,6 +48,7 @@ const handleCardMovedToDone = (action: Trello.WebhookResponse["action"]) => {
         const newRowValues: DoneItemsDBEntry[] = links.map((url) => [
             cardId,
             cardName,
+            cardUrl,
             url,
         ]);
 

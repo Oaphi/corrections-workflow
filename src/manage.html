@@ -113,7 +113,8 @@
     <body>
         <nav id="main-nav">
             <ul>
-                <li data-view="processed" class="selected">Processed Items</li>
+                <li data-view="done" class="selected">Done Items</li>
+                <li data-view="processed">Processed Items</li>
                 <li data-view="cards">Board Cards</li>
                 <li data-view="lists">Board Lists</li>
                 <li data-view="webhooks">Webhooks</li>
@@ -121,7 +122,19 @@
         </nav>
 
         <main>
-            <section id="view-processed" class="view">
+            <section id="view-done" class="view">
+                <table id="done">
+                    <thead>
+                        <tr>
+                            <th>Card</th>
+                            <th>Document</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+
+            <section id="view-processed" class="view hidden">
                 <table id="processed">
                     <thead>
                         <tr>
@@ -243,6 +256,11 @@
                 }
 
                 /**
+                 * @type {{ cardId: string, cardName: string, cardUrl: string, url: string }[]}
+                 */
+                const done = JSON.parse("<?= done ?>");
+
+                /**
                  * @type {Array<ItemError | ItemSuccess>}
                  */
                 const processed = JSON.parse("<?= processed ?>");
@@ -253,15 +271,49 @@
                 /** @type {{ id: string, name: string }[]} */
                 const lists = JSON.parse("<?= lists ?>");
 
-                const itemsReport = document.getElementById("processed");
-                if (!itemsReport) {
-                    console.debug("missing report table");
+                const doneReport = document.getElementById("done");
+                if (!doneReport) {
+                    console.debug("missing 'done' items report table");
                     return;
                 }
 
-                const itemsReportBody = itemsReport.querySelector("tbody");
+                const doneReportBody = doneReport.querySelector("tbody");
 
-                const items = processed.map((item) => {
+                const doneRows = done.map((item) => {
+                    const row = document.createElement("tr");
+
+                    const ccell = document.createElement("td");
+
+                    const clink = document.createElement("a");
+                    clink.href = item.cardUrl;
+                    clink.target = "_blank";
+                    clink.textContent = item.cardName;
+                    ccell.append(clink);
+
+                    const dcell = document.createElement("td");
+
+                    const dlink = document.createElement("a");
+                    dlink.href = item.url;
+                    dlink.target = "_blank";
+                    dlink.textContent = item.url;
+                    dcell.append(dlink);
+
+                    row.append(ccell, dcell);
+                    return row;
+                });
+
+                doneReportBody.append(...doneRows);
+
+                const processedReport = document.getElementById("processed");
+                if (!processedReport) {
+                    console.debug("missing 'processed' items report table");
+                    return;
+                }
+
+                const processedReportBody =
+                    processedReport.querySelector("tbody");
+
+                const processedRows = processed.map((item) => {
                     const row = document.createElement("tr");
 
                     if (isItemError(item)) {
@@ -292,11 +344,11 @@
                     return row;
                 });
 
-                itemsReportBody.append(...items);
+                processedReportBody.append(...processedRows);
 
                 const cardsReport = document.getElementById("cards");
                 if (!cardsReport) {
-                    console.debug("missing cards report table");
+                    console.debug("missing 'cards' report table");
                     return;
                 }
 
@@ -329,7 +381,7 @@
 
                 const listsReport = document.getElementById("lists");
                 if (!listsReport) {
-                    console.debug("missing lists report table");
+                    console.debug("missing 'lists' report table");
                     return;
                 }
 
@@ -352,7 +404,7 @@
 
                 const whReport = document.getElementById("webhooks");
                 if (!whReport) {
-                    console.debug("missing webhooks report table");
+                    console.debug("missing 'webhooks' report table");
                     return;
                 }
 

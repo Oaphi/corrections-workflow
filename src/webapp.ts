@@ -7,6 +7,13 @@ interface ProcessedItemInfo {
     updatedAt?: string;
 }
 
+interface DoneItemInfo {
+    cardId: string;
+    cardName: string;
+    cardUrl: string;
+    url: string;
+}
+
 const getWebAppUrl = (): string => {
     const store = PropertiesService.getScriptProperties();
     const deploymentId = store.getProperty("deployment_id");

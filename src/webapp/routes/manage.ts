@@ -31,6 +31,34 @@ const getManageRoute = (
 
     template.processed = JSON.stringify(processedItems);
 
+    const doneItems: DoneItemInfo[] = [];
+
+    const db = SpreadsheetApp.openById(doneItemsDatabaseId);
+
+    const table = db.getSheetByName("Items");
+    if (table) {
+        const range = table.getRange(
+            2,
+            1,
+            table.getLastRow() - 1,
+            table.getLastColumn()
+        );
+
+        const entries = range.getValues() as DoneItemsDBEntry[];
+
+        entries.forEach((record) => {
+            const [cardId, cardName, cardUrl, url] = record;
+            doneItems.push({
+                cardId,
+                cardName,
+                cardUrl: `https://trello.com/c/${cardUrl}`,
+                url,
+            });
+        });
+    }
+
+    template.done = JSON.stringify(doneItems);
+
     template.cards = JSON.stringify(getTrelloCards(trelloBoardId));
     template.lists = JSON.stringify(getTrelloLists(trelloBoardId));
     template.webhooks = JSON.stringify(getTrelloWebhooks());
