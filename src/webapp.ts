@@ -2,6 +2,7 @@ interface ProcessedItemInfo {
     error: boolean;
     id: string;
     name?: string;
+    url?: string;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -29,39 +30,10 @@ const doGet = ({ parameter }: GoogleAppsScript.Events.DoGet) => {
     }
 
     if (path === "manage") {
-        const template = HtmlService.createTemplateFromFile("src/manage.html");
-
-        const processedIds = getItemIds(folderId);
-
-        const processedItems: ProcessedItemInfo[] = [];
-
-        processedIds.forEach((id) => {
-            const item: ProcessedItemInfo = { id, error: false };
-
-            try {
-                const file = DriveApp.getFileById(id);
-                item.name = file.getName();
-                item.createdAt = file.getDateCreated().toISOString();
-                item.updatedAt = file.getLastUpdated().toISOString();
-            } catch (error) {
-                console.log(error);
-                item.error = true;
-            }
-
-            processedItems.push(item);
-        });
-
-        template.processed = JSON.stringify(processedItems);
-
-        template.cards = JSON.stringify(getTrelloCards(trelloBoardId));
-        template.lists = JSON.stringify(getTrelloLists(trelloBoardId));
-        template.webhooks = JSON.stringify(getTrelloWebhooks());
-        return template.evaluate();
+        return getManageRoute({ folderId });
     }
 
-    const template = HtmlService.createTemplateFromFile("src/auth.html");
-    template.url = getWebAppUrl();
-    return template.evaluate();
+    return getAuthRoute();
 };
 
 const getReviewRecipient = (): string => {

@@ -113,7 +113,7 @@
     <body>
         <nav id="main-nav">
             <ul>
-                <li data-view="processed" class="selected">Processed</li>
+                <li data-view="processed" class="selected">Processed Items</li>
                 <li data-view="cards">Board Cards</li>
                 <li data-view="lists">Board Lists</li>
                 <li data-view="webhooks">Webhooks</li>
@@ -185,7 +185,14 @@
         <script>
             /**
              * @typedef {{ id: string, error: true }} ItemError
-             * @typedef {{ id: string, error: false, name: string, createdAt: string, updatedAt: string }} ItemSuccess
+             * @typedef {{
+             *  id: string,
+             *  error: false,
+             *  name: string,
+             *  createdAt: string,
+             *  updatedAt: string,
+             *  url: string
+             * }} ItemSuccess
              */
 
             /**
@@ -270,10 +277,7 @@
                     const ncell = document.createElement("td");
 
                     const link = document.createElement("a");
-                    link.href =
-                        "https://docs.google.com/document/d/" +
-                        item.id +
-                        "edit";
+                    link.href = item.url;
                     link.target = "_blank";
                     link.textContent = item.name;
                     ncell.append(link);
