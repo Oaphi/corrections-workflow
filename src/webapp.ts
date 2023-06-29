@@ -15,9 +15,16 @@ const getWebAppUrl = (): string => {
         : "";
 };
 
-const getWebhookResponseAction = (body: string) => {
-    const { action }: Trello.WebhookResponse = JSON.parse(body);
-    return action;
+const getWebhookResponseAction = (
+    body: string
+): Trello.WebhookResponse["action"] | null => {
+    try {
+        const { action }: Trello.WebhookResponse = JSON.parse(body);
+        return action;
+    } catch (error) {
+        console.log(`[webhook] failed to parse webhook body:\n${error}`);
+        return null;
+    }
 };
 
 const doGet = ({ parameter }: GoogleAppsScript.Events.DoGet) => {
@@ -64,102 +71,22 @@ const doPost = ({
     const { webhook } = parameter || {};
     const { contents } = postData || {};
 
+    const action = getWebhookResponseAction(contents);
+
+    if (!action) {
+        return;
+    }
+
     if (webhook === "progress") {
-        try {
-            const { type, data, display } = getWebhookResponseAction(contents);
-
-            if (
-                type !== "updateCard" ||
-                (data.listAfter.id !== progressListModelId &&
-                    data.listBefore.id !== todoListModelId)
-            ) {
-                return;
-            }
-
-            const {
-                entities: {
-                    card: { text, id },
-                },
-            } = display;
-
-            const recipient = getReviewRecipient();
-            if (!recipient) return;
-
-            const subject = `[в работе] ${text}`;
-
-            const card = getTrelloCard(id);
-            if (!card) return;
-
-            const { desc, name } = card;
-
-            GmailApp.sendEmail(recipient, subject, "", {
-                htmlBody: `
-<p>Cтатья "${name}" в <a href="${desc}" target="_blank">работе</a></p>
-${makeEmailSignature()}`,
-            });
-        } catch (error) {
-            console.log(`[webhook]\n${error}`);
-        }
+        handleCardMovedToProgress(action);
     }
 
     // TODO: expand
     if (webhook === "review") {
-        try {
-            const { type, data, display } = getWebhookResponseAction(contents);
-
-            if (
-                type === "updateCard" &&
-                data.listAfter.id === reviewListModelId &&
-                data.listBefore.id === progressListModelId
-            ) {
-                const {
-                    entities: {
-                        card: { text, id },
-                    },
-                } = display;
-
-                const recipient = getReviewRecipient();
-                if (!recipient) return;
-
-                const subject = `[готово к ревью] ${text}`;
-
-                const card = getTrelloCard(id);
-                if (!card) return;
-
-                const { desc, name } = card;
-
-                GmailApp.sendEmail(recipient, subject, "", {
-                    htmlBody: `
-<p>Корректура статьи "${name}" готова к <a href="${desc}" target="_blank">ревью</a></p>
-${makeEmailSignature()}`,
-                });
-            }
-        } catch (error) {
-            console.log(`[webhook]\n${error}`);
-        }
+        handleCardMovedToReview(action);
     }
 
     if (webhook === "done") {
-        try {
-            const { type, data, display } = getWebhookResponseAction(contents);
-
-            console.log(display);
-
-            if (type !== "updateCard" || data.listAfter.id !== doneListModelId)
-                return;
-
-            const db = SpreadsheetApp.openById(doneItemsDatabaseId);
-
-            const table = db.getSheetByName("Items");
-            if (!table) return;
-
-            const newId = table.getLastRow();
-
-            const newRow = [newId];
-
-            table.appendRow(newRow);
-        } catch (error) {
-            console.log(`[webhook]\n${error}`);
-        }
+        handleCardMovedToDone(action);
     }
 };
