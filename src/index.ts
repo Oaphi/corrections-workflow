@@ -1,11 +1,12 @@
-
 type ProcessedItemIds = string[];
 
 /**
  * @summary gets .pages {@link GoogleAppsScript.Drive.File}s in a given folder
  * @param folderId folder id to lookup
  */
-const getPagesFiles = (folderId: string): Map<string, GoogleAppsScript.Drive.File> => {
+const getPagesFiles = (
+    folderId: string
+): Map<string, GoogleAppsScript.Drive.File> => {
     const pages = new Map<string, GoogleAppsScript.Drive.File>();
 
     const folder = DriveApp.getFolderById(folderId);
@@ -31,16 +32,22 @@ const getParentIds = (file: GoogleAppsScript.Drive.File): Set<string> => {
     return ids;
 };
 
-const convertToDocs = (file: GoogleAppsScript.Drive.File): string | undefined => {
+const convertToDocs = (
+    file: GoogleAppsScript.Drive.File
+): string | undefined => {
     const blob = file.getBlob();
 
-    const converted = Drive.Files?.insert({
-        title: blob.getName(),
-        mimeType: "application/vnd.google-apps.document",
-        parents: [...getParentIds(file)].map((id) => ({ id }))
-    }, blob, {
-        convert: true
-    });
+    const converted = Drive.Files?.insert(
+        {
+            title: blob.getName(),
+            mimeType: "application/vnd.google-apps.document",
+            parents: [...getParentIds(file)].map((id) => ({ id })),
+        },
+        blob,
+        {
+            convert: true,
+        }
+    );
 
     return converted?.id;
 };
@@ -49,7 +56,9 @@ const convertToDocs = (file: GoogleAppsScript.Drive.File): string | undefined =>
  * @summary gets items in a given folder
  * @param folderId folder id to lookup
  */
-const getItems = (folderId: string): Map<string, GoogleAppsScript.Drive.File> => {
+const getItems = (
+    folderId: string
+): Map<string, GoogleAppsScript.Drive.File> => {
     const folder = DriveApp.getFolderById(folderId);
 
     const files = folder.getFiles();
@@ -63,7 +72,7 @@ const getItems = (folderId: string): Map<string, GoogleAppsScript.Drive.File> =>
     }
 
     return items;
-}
+};
 
 /**
  * @summary gets item ids in a given folder
@@ -83,6 +92,17 @@ const getItemIds = (folderId: string): Set<string> => {
     }
 
     return ids;
+};
+
+const getProcessedItemIds = (key: string): Set<string> => {
+    const store = PropertiesService.getScriptProperties();
+    const ids: ProcessedItemIds = JSON.parse(store.getProperty(key) || "[]");
+    return new Set(ids);
+};
+
+const setProcessedItemIds = (key: string, ids: Set<string>) => {
+    const store = PropertiesService.getScriptProperties();
+    store.setProperty(key, JSON.stringify([...ids]));
 };
 
 const processReadyItems = () => {
@@ -111,11 +131,7 @@ const processReadyItems = () => {
 const processNewItems = () => {
     const key = "processed_items";
 
-    const store = PropertiesService.getScriptProperties();
-
-    const ids: ProcessedItemIds = JSON.parse(store.getProperty(key) || "[]");
-
-    const processedIds = new Set(ids);
+    const processedIds = getProcessedItemIds(key);
     const itemIds = getItemIds(folderId);
 
     const [unprocessedIds] = diffSets(itemIds, processedIds);
@@ -124,7 +140,7 @@ const processNewItems = () => {
 
     const mimes = new Set([
         "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ]);
 
     const cards = getTrelloCards(trelloBoardId);
@@ -174,7 +190,9 @@ const processNewItems = () => {
 
             const convertTask = readTask(convertId);
             if (convertTask?.status !== "finished") {
-                console.log(`[${itemId}] conversion status: ${convertTask?.status}`);
+                console.log(
+                    `[${itemId}] conversion status: ${convertTask?.status}`
+                );
 
                 if (convertTask?.status === "error") {
                     tasksInfo.convertId = retryTask(convertId)?.id;
@@ -205,7 +223,11 @@ const processNewItems = () => {
                 return;
             }
 
-            const { result: { files: [{ url, filename }] } } = exportTask;
+            const {
+                result: {
+                    files: [{ url, filename }],
+                },
+            } = exportTask;
 
             const res = UrlFetchApp.fetch(url);
             if (res.getResponseCode() !== 200) {
@@ -215,11 +237,15 @@ const processNewItems = () => {
 
             const blob = res.getBlob();
 
-            const gdoc = Drive.Files?.insert({
-                title: filename.replace(/\.\w+?$/, ""),
-                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                parents: [{ id: folderId }]
-            }, blob);
+            const gdoc = Drive.Files?.insert(
+                {
+                    title: filename.replace(/\.\w+?$/, ""),
+                    mimeType:
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    parents: [{ id: folderId }],
+                },
+                blob
+            );
 
             if (!gdoc) return;
 
@@ -237,7 +263,9 @@ const processNewItems = () => {
             const mime = file.getMimeType();
 
             if (mime === "application/vnd.google-apps.document") {
-                const itemCard = cards.find(({ desc }) => desc.includes(`/d/${itemId}`));
+                const itemCard = cards.find(({ desc }) =>
+                    desc.includes(`/d/${itemId}`)
+                );
                 if (itemCard) {
                     console.log(`[${itemId}] Trello card for the item exists`);
                     return true;
@@ -246,7 +274,7 @@ const processNewItems = () => {
                 const newCard = addTrelloCard({
                     idList: todoListId,
                     desc: `https://docs.google.com/document/d/${itemId}/edit`,
-                    name: file.getName().replace(/\.\w+?$/, "")
+                    name: file.getName().replace(/\.\w+?$/, ""),
                 });
 
                 if (!newCard) {
@@ -274,5 +302,5 @@ const processNewItems = () => {
 
     const updatedIds = mergeSets(processedIds, newlyProcessedIds);
 
-    store.setProperty(key, JSON.stringify([...updatedIds]));
+    setProcessedItemIds(key, updatedIds);
 };
