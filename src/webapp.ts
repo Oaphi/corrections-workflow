@@ -7,6 +7,13 @@ interface ProcessedItemInfo {
     updatedAt?: string;
 }
 
+interface ReviewItemInfo {
+    cardId: string;
+    cardName: string;
+    cardUrl: string;
+    url: string;
+}
+
 interface DoneItemInfo {
     cardId: string;
     cardName: string;
