@@ -5,6 +5,15 @@ type DoneItemsDBEntry = [
     doc_url: string
 ];
 
+const getGDocLinksFromCard = (card: Trello.Card) => {
+    const { desc } = card;
+
+    const docsLinkRegExp =
+        /https:\/\/docs\.google\.com\/document\/d\/[\w=-]+(?:\/edit)?/g;
+
+    return desc.match(docsLinkRegExp) || [];
+};
+
 const handleCardMovedToDone = (action: Trello.WebhookResponse["action"]) => {
     try {
         const { type, data } = action;
@@ -26,12 +35,7 @@ const handleCardMovedToDone = (action: Trello.WebhookResponse["action"]) => {
             return;
         }
 
-        const { desc } = card;
-
-        const docsLinkRegExp =
-            /https:\/\/docs\.google\.com\/document\/d\/[\w=-]+(?:\/edit)?/g;
-
-        const links = desc.match(docsLinkRegExp) || [];
+        const links = getGDocLinksFromCard(card);
 
         if (!links.length) {
             console.log(`[webhook] no GDocs links found in "${cardName}" card`);
