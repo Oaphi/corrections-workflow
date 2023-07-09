@@ -94,15 +94,17 @@ const getItemIds = (folderId: string): Set<string> => {
     return ids;
 };
 
-const getProcessedItemIds = (key: string): Set<string> => {
+const getProcessedItemIds = (): Set<string> => {
     const store = PropertiesService.getScriptProperties();
-    const ids: ProcessedItemIds = JSON.parse(store.getProperty(key) || "[]");
+    const ids: ProcessedItemIds = JSON.parse(
+        store.getProperty(processedItemsKey) || "[]"
+    );
     return new Set(ids);
 };
 
-const setProcessedItemIds = (key: string, ids: Set<string>) => {
+const setProcessedItemIds = (ids: Set<string>) => {
     const store = PropertiesService.getScriptProperties();
-    store.setProperty(key, JSON.stringify([...ids]));
+    store.setProperty(processedItemsKey, JSON.stringify([...ids]));
 };
 
 const processReadyItems = () => {
@@ -129,9 +131,7 @@ const processReadyItems = () => {
 };
 
 const processNewItems = () => {
-    const key = "processed_items";
-
-    const processedIds = getProcessedItemIds(key);
+    const processedIds = getProcessedItemIds();
     const itemIds = getItemIds(folderId);
 
     const [unprocessedIds] = diffSets(itemIds, processedIds);
@@ -304,5 +304,5 @@ const processNewItems = () => {
 
     const updatedIds = mergeSets(processedIds, newlyProcessedIds);
 
-    setProcessedItemIds(key, updatedIds);
+    setProcessedItemIds(updatedIds);
 };
