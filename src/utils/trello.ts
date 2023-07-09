@@ -100,6 +100,31 @@ const getTrelloLists = (boardId: string): Trello.List[] => {
 };
 
 /**
+ * {@see https://developer.atlassian.com/cloud/trello/rest/api-group-lists/#api-lists-id-cards-get}
+ */
+const getTrelloCardsInList = (listId: string): Trello.Card[] => {
+    const token = getTrelloToken();
+    if (!token) {
+        console.error("[api error] missing Trello token");
+        return [];
+    }
+
+    const res = UrlFetchApp.fetch(
+        `${trelloApiBase}/lists/${listId}/cards?key=${trelloApiKey}&token=${token}`,
+        {
+            muteHttpExceptions: true,
+        }
+    );
+
+    if (res.getResponseCode() !== 200) {
+        processAPIError(res);
+        return [];
+    }
+
+    return JSON.parse(res.getContentText());
+};
+
+/**
  * {@see https://developer.atlassian.com/cloud/trello/rest/api-group-tokens/#api-tokens-token-webhooks-get}
  */
 const getTrelloWebhooks = (): Trello.Webhook[] => {
