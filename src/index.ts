@@ -136,7 +136,9 @@ const processNewItems = () => {
 
     const [unprocessedIds] = diffSets(itemIds, processedIds);
 
-    console.log(`[unprocessed]\n${[...unprocessedIds].join("\n")}`);
+    if (unprocessedIds.size) {
+        console.log(`[unprocessed]\n${[...unprocessedIds].join("\n")}`);
+    }
 
     const mimes = new Set([
         "application/msword",
