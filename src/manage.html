@@ -114,6 +114,7 @@
         <nav id="main-nav">
             <ul>
                 <li data-view="done" class="selected">Done Items</li>
+                <li data-view="review">Review Items</li>
                 <li data-view="processed">Processed Items</li>
                 <li data-view="cards">Board Cards</li>
                 <li data-view="lists">Board Lists</li>
@@ -124,6 +125,18 @@
         <main>
             <section id="view-done" class="view">
                 <table id="done">
+                    <thead>
+                        <tr>
+                            <th>Card</th>
+                            <th>Document</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+
+            <section id="view-review" class="view hidden">
+                <table id="review">
                     <thead>
                         <tr>
                             <th>Card</th>
@@ -261,6 +274,11 @@
                 const done = JSON.parse("<?= done ?>");
 
                 /**
+                 * @type {{ cardId: string, cardName: string, cardUrl: string, url: string }[]}
+                 */
+                const review = JSON.parse("<?= review ?>");
+
+                /**
                  * @type {Array<ItemError | ItemSuccess>}
                  */
                 const processed = JSON.parse("<?= processed ?>");
@@ -303,6 +321,39 @@
                 });
 
                 doneReportBody.append(...doneRows);
+
+                const reviewReport = document.getElementById("review");
+                if (!reviewReport) {
+                    console.debug("missing 'review' items report table");
+                    return;
+                }
+
+                const reviewReportBody = reviewReport.querySelector("tbody");
+
+                const reviewRows = review.map((item) => {
+                    const row = document.createElement("tr");
+
+                    const ccell = document.createElement("td");
+
+                    const clink = document.createElement("a");
+                    clink.href = item.cardUrl;
+                    clink.target = "_blank";
+                    clink.textContent = item.cardName;
+                    ccell.append(clink);
+
+                    const dcell = document.createElement("td");
+
+                    const dlink = document.createElement("a");
+                    dlink.href = item.url;
+                    dlink.target = "_blank";
+                    dlink.textContent = item.url;
+                    dcell.append(dlink);
+
+                    row.append(ccell, dcell);
+                    return row;
+                });
+
+                reviewReportBody.append(...reviewRows);
 
                 const processedReport = document.getElementById("processed");
                 if (!processedReport) {

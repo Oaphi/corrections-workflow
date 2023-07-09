@@ -2,35 +2,7 @@ interface ManageRouteOptions {
     folderId: string;
 }
 
-const getManageRoute = (
-    config: ManageRouteOptions
-): GoogleAppsScript.HTML.HtmlOutput => {
-    const template = HtmlService.createTemplateFromFile("src/manage.html");
-
-    const processedIds = getItemIds(config.folderId);
-
-    const processedItems: ProcessedItemInfo[] = [];
-
-    processedIds.forEach((id) => {
-        const item: ProcessedItemInfo = { id, error: false };
-
-        try {
-            item.url = DocumentApp.openById(id).getUrl();
-
-            const file = DriveApp.getFileById(id);
-            item.name = file.getName();
-            item.createdAt = file.getDateCreated().toISOString();
-            item.updatedAt = file.getLastUpdated().toISOString();
-        } catch (error) {
-            console.log(error);
-            item.error = true;
-        }
-
-        processedItems.push(item);
-    });
-
-    template.processed = JSON.stringify(processedItems);
-
+const getDoneItems = (): DoneItemInfo[] => {
     const doneItems: DoneItemInfo[] = [];
 
     const db = SpreadsheetApp.openById(doneItemsDatabaseId);
@@ -57,7 +29,56 @@ const getManageRoute = (
         });
     }
 
-    template.done = JSON.stringify(doneItems);
+    return doneItems;
+};
+
+const getReviewItems = (): ReviewItemInfo[] => {
+    const cards = getTrelloCardsInList(reviewListModelId);
+
+    return cards.map((card) => {
+        return {
+            cardId: card.id,
+            cardName: card.name,
+            cardUrl: `https://trello.com/c/${card.shortLink}`,
+            url: getGDocLinksFromCard(card)[0] ?? "",
+        };
+    });
+};
+
+const getProcessedItems = (config: ManageRouteOptions): ProcessedItemInfo[] => {
+    const processedIds = getItemIds(config.folderId);
+
+    const processedItems: ProcessedItemInfo[] = [];
+
+    processedIds.forEach((id) => {
+        const item: ProcessedItemInfo = { id, error: false };
+
+        try {
+            item.url = DocumentApp.openById(id).getUrl();
+
+            const file = DriveApp.getFileById(id);
+            item.name = file.getName();
+            item.createdAt = file.getDateCreated().toISOString();
+            item.updatedAt = file.getLastUpdated().toISOString();
+        } catch (error) {
+            console.log(error);
+            item.error = true;
+        }
+
+        processedItems.push(item);
+    });
+
+    return processedItems;
+};
+
+const getManageRoute = (
+    config: ManageRouteOptions
+): GoogleAppsScript.HTML.HtmlOutput => {
+    const template = HtmlService.createTemplateFromFile("src/manage.html");
+
+    template.processed = JSON.stringify(getProcessedItems(config));
+    template.review = JSON.stringify(getReviewItems());
+    template.done = JSON.stringify(getDoneItems());
 
     template.cards = JSON.stringify(getTrelloCards(trelloBoardId));
     template.lists = JSON.stringify(getTrelloLists(trelloBoardId));
