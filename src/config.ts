@@ -13,3 +13,5 @@ const doneListModelId = "61b9a7bc58af8417b834e911";
 const doneItemsDatabaseId = "162ALY4mBbCvAaEjdOn7sF1XR3YZr0jcrgLAK16s7kQA";
 
 const processedItemsKey = "processed_items";
+const newItemsTriggerDisabledKey = "new_items_trigger_disabled";
+const readyItemsTriggerDisabledKey = "ready_items_trigger_disabled";

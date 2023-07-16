@@ -108,6 +108,11 @@ const setProcessedItemIds = (ids: Set<string>) => {
 };
 
 const processReadyItems = () => {
+    if (isProcessReadyItemsTriggerDisabled()) {
+        console.log(`[ready] trigger disabled`);
+        return;
+    }
+
     const cards = getTrelloCards(trelloBoardId);
     if (!cards.length) {
         console.log(`[trello-api] failed get Trello cards`);
@@ -131,6 +136,11 @@ const processReadyItems = () => {
 };
 
 const processNewItems = () => {
+    if (isNewItemsTriggerDisabled()) {
+        console.log(`[unprocessed] trigger disabled`);
+        return;
+    }
+
     const processedIds = getProcessedItemIds();
     const itemIds = getItemIds(folderId);
 
