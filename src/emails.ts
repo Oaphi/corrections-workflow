@@ -1,6 +1,7 @@
 /**
  * @summary creates an email signature
  */
-const makeEmailSignature = () => {
-    return `<p>WR, Олег</p>`;
+const makeEmailSignature = (): string => {
+    const store = PropertiesService.getScriptProperties();
+    return store.getProperty('email_signature') || 'WR,';
 };
