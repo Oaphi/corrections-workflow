@@ -26,11 +26,15 @@ const handleCardMovedToProgress = (
         const card = getTrelloCard(id);
         if (!card) return;
 
-        const { desc, name } = card;
+        const [docURL] = getGDocLinksFromCard(card);
+
+        const { name } = card;
+
+        const docName = docURL ? `<a href="${docURL}" target="_blank">"${name}"</a>` : `"${name}"`;
 
         GmailApp.sendEmail(recipient, subject, "", {
             htmlBody: `
-<p>Cтатья "${name}" в <a href="${desc}" target="_blank">работе</a></p>
+<p>Статья ${docName} в работе.</p>
 ${makeEmailSignature()}`,
         });
     } catch (error) {
