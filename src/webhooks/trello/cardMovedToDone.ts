@@ -16,6 +16,8 @@ const getGDocLinksFromCard = (card: Trello.Card) => {
 
 const handleCardMovedToDone = (action: Trello.WebhookResponse["action"]) => {
     try {
+        const { id: databaseId } = getDatabaseConfig();
+
         const { listModelIds } = getTrelloConfig();
 
         const { type, data } = action;
@@ -43,11 +45,11 @@ const handleCardMovedToDone = (action: Trello.WebhookResponse["action"]) => {
             console.log(`[webhook] no GDocs links found in "${cardName}" card`);
         }
 
-        const db = SpreadsheetApp.openById(doneItemsDatabaseId);
+        const db = SpreadsheetApp.openById(databaseId);
 
         const table = db.getSheetByName("Items");
         if (!table) {
-            console.log(`[webhook] no done items DB (${doneItemsDatabaseId})`);
+            console.log(`[webhook] no done items DB (${databaseId})`);
             return;
         }
 

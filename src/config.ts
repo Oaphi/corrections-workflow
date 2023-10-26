@@ -1,10 +1,12 @@
 const folderId = "1rEwHBw4OSJ9H72kpdZh2KQA9Fsu5PyuF";
 
-const doneItemsDatabaseId = "162ALY4mBbCvAaEjdOn7sF1XR3YZr0jcrgLAK16s7kQA";
-
 const processedItemsKey = "processed_items";
 const newItemsTriggerDisabledKey = "new_items_trigger_disabled";
 const readyItemsTriggerDisabledKey = "ready_items_trigger_disabled";
+
+interface DatabaseConfig {
+    id: string;
+}
 
 interface TrelloConfig {
     apiKey: string;
@@ -21,6 +23,16 @@ interface TrelloConfig {
         todo: string;
     };
 }
+
+const getDatabaseConfig = (): DatabaseConfig => {
+    const store = PropertiesService.getScriptProperties();
+
+    const props = store.getProperties();
+
+    return {
+        id: props["database_id"],
+    };
+};
 
 const getTrelloConfig = (): TrelloConfig => {
     const store = PropertiesService.getScriptProperties();

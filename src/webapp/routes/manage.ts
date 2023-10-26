@@ -3,9 +3,11 @@ interface ManageRouteOptions {
 }
 
 const getDoneItems = (): DoneItemInfo[] => {
+    const { id: databaseId } = getDatabaseConfig();
+
     const doneItems: DoneItemInfo[] = [];
 
-    const db = SpreadsheetApp.openById(doneItemsDatabaseId);
+    const db = SpreadsheetApp.openById(databaseId);
 
     const table = db.getSheetByName("Items");
     if (table) {
