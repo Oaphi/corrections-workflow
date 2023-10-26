@@ -16,12 +16,14 @@ const getGDocLinksFromCard = (card: Trello.Card) => {
 
 const handleCardMovedToDone = (action: Trello.WebhookResponse["action"]) => {
     try {
+        const { listModelIds } = getTrelloConfig();
+
         const { type, data } = action;
 
         if (
             type !== "updateCard" ||
             !data.listAfter ||
-            data.listAfter.id !== doneListModelId
+            data.listAfter.id !== listModelIds.done
         ) {
             return;
         }

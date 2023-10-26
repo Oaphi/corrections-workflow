@@ -1,10 +1,5 @@
 const folderId = "1rEwHBw4OSJ9H72kpdZh2KQA9Fsu5PyuF";
 
-const todoListModelId = "61b9a7b139e68e5fe566b75a";
-const progressListModelId = "61b9a7b7ac684873d202db95";
-const reviewListModelId = "61b9a7bb1b23a22610ed26f9";
-const doneListModelId = "61b9a7bc58af8417b834e911";
-
 const doneItemsDatabaseId = "162ALY4mBbCvAaEjdOn7sF1XR3YZr0jcrgLAK16s7kQA";
 
 const processedItemsKey = "processed_items";
@@ -15,9 +10,15 @@ interface TrelloConfig {
     apiKey: string;
     boardId: string;
     listIds: {
-        todo: string;
-        review: string;
         done: string;
+        review: string;
+        todo: string;
+    };
+    listModelIds: {
+        done: string;
+        progress: string;
+        review: string;
+        todo: string;
     };
 }
 
@@ -33,6 +34,12 @@ const getTrelloConfig = (): TrelloConfig => {
             done: props["done_list_id"],
             review: props["review_list_id"],
             todo: props["todo_list_id"],
+        },
+        listModelIds: {
+            done: props["done_list_model_id"],
+            progress: props["progress_list_model_id"],
+            review: props["review_list_model_id"],
+            todo: props["todo_list_model_id"],
         },
     };
 };

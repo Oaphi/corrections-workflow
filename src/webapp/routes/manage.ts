@@ -33,7 +33,9 @@ const getDoneItems = (): DoneItemInfo[] => {
 };
 
 const getReviewItems = (): ReviewItemInfo[] => {
-    const cards = getTrelloCardsInList(reviewListModelId);
+    const { listModelIds } = getTrelloConfig();
+
+    const cards = getTrelloCardsInList(listModelIds.review);
 
     return cards.map((card) => {
         return {

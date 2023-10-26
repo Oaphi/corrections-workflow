@@ -20,17 +20,19 @@ const installTrelloWebhook = (
         return;
     }
 
+    const { listModelIds } = getTrelloConfig();
+
     const idModelMap: Record<TrelloWebhookType, [id: string, desc: string]> = {
         done: [
-            doneListModelId,
+            listModelIds.done,
             `Handles an item being moved to the 'done' column`,
         ],
         review: [
-            reviewListModelId,
+            listModelIds.review,
             `Sends an email when an item is moved to the 'review' column`,
         ],
         progress: [
-            progressListModelId,
+            listModelIds.progress,
             `Sends an email when an item is moved to the 'progress' column`,
         ],
     };

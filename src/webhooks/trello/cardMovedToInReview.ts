@@ -1,13 +1,15 @@
 const handleCardMovedToReview = (action: Trello.WebhookResponse["action"]) => {
     try {
+        const { listModelIds } = getTrelloConfig();
+
         const { type, data, display } = action;
 
         if (
             type !== "updateCard" ||
             !data.listAfter ||
             !data.listBefore ||
-            data.listAfter.id !== reviewListModelId ||
-            data.listBefore.id !== progressListModelId
+            data.listAfter.id !== listModelIds.review ||
+            data.listBefore.id !== listModelIds.progress
         ) {
             return;
         }
