@@ -18,8 +18,10 @@ const getTrelloBoard = (id: string): Trello.Board | undefined => {
     const token = getTrelloToken();
     if (!token) return;
 
+    const { apiKey } = getTrelloConfig();
+
     const res = UrlFetchApp.fetch(
-        `${trelloApiBase}/boards/${id}?key=${trelloApiKey}&token=${token}`,
+        `${trelloApiBase}/boards/${id}?key=${apiKey}&token=${token}`,
         {
             muteHttpExceptions: true,
         }
@@ -40,8 +42,10 @@ const getTrelloCard = (id: string): Trello.Card | undefined => {
     const token = getTrelloToken();
     if (!token) return;
 
+    const { apiKey } = getTrelloConfig();
+
     const res = UrlFetchApp.fetch(
-        `${trelloApiBase}/cards/${id}?key=${trelloApiKey}&token=${token}`,
+        `${trelloApiBase}/cards/${id}?key=${apiKey}&token=${token}`,
         {
             muteHttpExceptions: true,
         }
@@ -62,8 +66,10 @@ const getTrelloCards = (boardId: string): Trello.Card[] => {
     const token = getTrelloToken();
     if (!token) return [];
 
+    const { apiKey } = getTrelloConfig();
+
     const res = UrlFetchApp.fetch(
-        `${trelloApiBase}/boards/${boardId}/cards?key=${trelloApiKey}&token=${token}`,
+        `${trelloApiBase}/boards/${boardId}/cards?key=${apiKey}&token=${token}`,
         {
             muteHttpExceptions: true,
         }
@@ -84,8 +90,10 @@ const getTrelloLists = (boardId: string): Trello.List[] => {
     const token = getTrelloToken();
     if (!token) return [];
 
+    const { apiKey } = getTrelloConfig();
+
     const res = UrlFetchApp.fetch(
-        `${trelloApiBase}/boards/${boardId}/lists?key=${trelloApiKey}&token=${token}`,
+        `${trelloApiBase}/boards/${boardId}/lists?key=${apiKey}&token=${token}`,
         {
             muteHttpExceptions: true,
         }
@@ -109,8 +117,10 @@ const getTrelloCardsInList = (listId: string): Trello.Card[] => {
         return [];
     }
 
+    const { apiKey } = getTrelloConfig();
+
     const res = UrlFetchApp.fetch(
-        `${trelloApiBase}/lists/${listId}/cards?key=${trelloApiKey}&token=${token}`,
+        `${trelloApiBase}/lists/${listId}/cards?key=${apiKey}&token=${token}`,
         {
             muteHttpExceptions: true,
         }
@@ -131,8 +141,10 @@ const getTrelloWebhooks = (): Trello.Webhook[] => {
     const token = getTrelloToken();
     if (!token) return [];
 
+    const { apiKey } = getTrelloConfig();
+
     const res = UrlFetchApp.fetch(
-        `${trelloApiBase}/tokens/${token}/webhooks?key=${trelloApiKey}&token=${token}`,
+        `${trelloApiBase}/tokens/${token}/webhooks?key=${apiKey}&token=${token}`,
         {
             muteHttpExceptions: true,
         }
@@ -154,15 +166,18 @@ const addTrelloCard = (
 ): Trello.Card | undefined => {
     const token = getTrelloToken();
 
-    const res = UrlFetchApp.fetch(
-        `${trelloApiBase}/cards?key=${trelloApiKey}`,
-        {
-            method: "post",
-            muteHttpExceptions: true,
-            payload,
-            headers: getTrelloAuthHeader(trelloApiKey, token),
-        }
-    );
+    const { apiKey } = getTrelloConfig();
+
+    if (!token || !apiKey) {
+        return;
+    }
+
+    const res = UrlFetchApp.fetch(`${trelloApiBase}/cards?key=${apiKey}`, {
+        method: "post",
+        muteHttpExceptions: true,
+        payload,
+        headers: getTrelloAuthHeader(apiKey, token),
+    });
 
     if (res.getResponseCode() !== 200) {
         processAPIError(res);
@@ -178,13 +193,19 @@ const addTrelloCard = (
 const moveTrelloCard = (cardId: string, listId: string): boolean => {
     const token = getTrelloToken();
 
+    const { apiKey } = getTrelloConfig();
+
+    if (!token || !apiKey) {
+        return false;
+    }
+
     const res = UrlFetchApp.fetch(
-        `${trelloApiBase}/cards/${cardId}?key=${trelloApiKey}`,
+        `${trelloApiBase}/cards/${cardId}?key=${apiKey}`,
         {
             method: "put",
             muteHttpExceptions: true,
             payload: { idList: listId },
-            headers: getTrelloAuthHeader(trelloApiKey, token),
+            headers: getTrelloAuthHeader(apiKey, token),
         }
     );
 
@@ -206,15 +227,18 @@ const addTrelloWebhook = (
 ): Trello.Webhook | undefined => {
     const token = getTrelloToken();
 
-    const res = UrlFetchApp.fetch(
-        `${trelloApiBase}/webhooks?key=${trelloApiKey}`,
-        {
-            method: "post",
-            muteHttpExceptions: true,
-            payload,
-            headers: getTrelloAuthHeader(trelloApiKey, token),
-        }
-    );
+    const { apiKey } = getTrelloConfig();
+
+    if (!token || !apiKey) {
+        return;
+    }
+
+    const res = UrlFetchApp.fetch(`${trelloApiBase}/webhooks?key=${apiKey}`, {
+        method: "post",
+        muteHttpExceptions: true,
+        payload,
+        headers: getTrelloAuthHeader(apiKey, token),
+    });
 
     if (res.getResponseCode() !== 200) {
         processAPIError(res);
@@ -230,12 +254,18 @@ const addTrelloWebhook = (
 const removeTrelloWebhook = (id: string): boolean => {
     const token = getTrelloToken();
 
+    const { apiKey } = getTrelloConfig();
+
+    if (!token || !apiKey) {
+        return false;
+    }
+
     const res = UrlFetchApp.fetch(
-        `${trelloApiBase}/webhooks/${id}?key=${trelloApiKey}`,
+        `${trelloApiBase}/webhooks/${id}?key=${apiKey}`,
         {
             method: "delete",
             muteHttpExceptions: true,
-            headers: getTrelloAuthHeader(trelloApiKey, token),
+            headers: getTrelloAuthHeader(apiKey, token),
         }
     );
 

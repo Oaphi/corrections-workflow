@@ -113,7 +113,9 @@ const processReadyItems = () => {
         return;
     }
 
-    const cards = getTrelloCards(trelloBoardId);
+    const { boardId, listIds } = getTrelloConfig();
+
+    const cards = getTrelloCards(boardId);
     if (!cards.length) {
         console.log(`[trello-api] failed get Trello cards`);
         return;
@@ -126,12 +128,12 @@ const processReadyItems = () => {
         if (!card) return;
 
         const { idList } = card;
-        if (idList !== reviewListId) return;
+        if (idList !== listIds.review) return;
 
         const { items = [] } = Drive.Comments?.list(fileId) || {};
         if (items.length) return;
 
-        moveTrelloCard(card.id, doneListId);
+        moveTrelloCard(card.id, listIds.done);
     });
 };
 
@@ -140,6 +142,8 @@ const processNewItems = () => {
         console.log(`[unprocessed] trigger disabled`);
         return;
     }
+
+    const { boardId, listIds } = getTrelloConfig();
 
     const processedIds = getProcessedItemIds();
     const itemIds = getItemIds(folderId);
@@ -155,7 +159,7 @@ const processNewItems = () => {
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ]);
 
-    const cards = getTrelloCards(trelloBoardId);
+    const cards = getTrelloCards(boardId);
     if (!cards.length) {
         console.log(`[trello-api] failed get Trello cards`);
         return;
@@ -284,7 +288,7 @@ const processNewItems = () => {
                 }
 
                 const newCard = addTrelloCard({
-                    idList: todoListId,
+                    idList: listIds.todo,
                     desc: `https://docs.google.com/document/d/${itemId}/edit`,
                     name: file.getName().replace(/\.\w+?$/, ""),
                 });

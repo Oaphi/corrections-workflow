@@ -74,14 +74,16 @@ const getProcessedItems = (config: ManageRouteOptions): ProcessedItemInfo[] => {
 const getManageRoute = (
     config: ManageRouteOptions
 ): GoogleAppsScript.HTML.HtmlOutput => {
+    const { boardId } = getTrelloConfig();
+
     const template = HtmlService.createTemplateFromFile("src/manage.html");
 
     template.processed = JSON.stringify(getProcessedItems(config));
     template.review = JSON.stringify(getReviewItems());
     template.done = JSON.stringify(getDoneItems());
 
-    template.cards = JSON.stringify(getTrelloCards(trelloBoardId));
-    template.lists = JSON.stringify(getTrelloLists(trelloBoardId));
+    template.cards = JSON.stringify(getTrelloCards(boardId));
+    template.lists = JSON.stringify(getTrelloLists(boardId));
     template.webhooks = JSON.stringify(getTrelloWebhooks());
     return template.evaluate();
 };
