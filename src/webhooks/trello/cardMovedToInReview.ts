@@ -28,11 +28,17 @@ const handleCardMovedToReview = (action: Trello.WebhookResponse["action"]) => {
         const card = getTrelloCard(id);
         if (!card) return;
 
-        const { desc, name } = card;
+        const [docURL] = getGDocLinksFromCard(card);
+
+        const { name } = card;
+
+        const docName = docURL
+        ? `<a href="${docURL}" target="_blank">"${name}"</a>`
+        : `"${name}"`;
 
         GmailApp.sendEmail(recipient, subject, "", {
             htmlBody: `
-<p>Корректура статьи "${name}" готова к <a href="${desc}" target="_blank">ревью</a></p>
+<p>Корректура статьи ${docName} готова к ревью.</p>
 ${makeEmailSignature()}`,
         });
     } catch (error) {
