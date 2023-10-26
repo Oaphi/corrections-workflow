@@ -113,6 +113,8 @@ const processReadyItems = () => {
         return;
     }
 
+    const { rootFolderId } = getStorageConfig();
+
     const { boardId, listIds } = getTrelloConfig();
 
     const cards = getTrelloCards(boardId);
@@ -121,7 +123,7 @@ const processReadyItems = () => {
         return;
     }
 
-    const ids = getItemIds(folderId);
+    const ids = getItemIds(rootFolderId);
 
     ids.forEach((fileId) => {
         const card = cards.find(({ desc }) => desc.includes(fileId));
@@ -143,10 +145,13 @@ const processNewItems = () => {
         return;
     }
 
+    const { rootFolderId } = getStorageConfig();
+
     const { boardId, listIds } = getTrelloConfig();
 
     const processedIds = getProcessedItemIds();
-    const itemIds = getItemIds(folderId);
+
+    const itemIds = getItemIds(rootFolderId);
 
     const [unprocessedIds] = diffSets(itemIds, processedIds);
 
@@ -166,7 +171,8 @@ const processNewItems = () => {
     }
 
     const cloudConvertTasks = getCloudConvertTasksInfo();
-    const pagesFiles = getPagesFiles(folderId);
+
+    const pagesFiles = getPagesFiles(rootFolderId);
 
     pagesFiles.forEach((file, itemId) => {
         try {
@@ -258,7 +264,7 @@ const processNewItems = () => {
                     title: filename.replace(/\.\w+?$/, ""),
                     mimeType:
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    parents: [{ id: folderId }],
+                    parents: [{ id: rootFolderId }],
                 },
                 blob
             );

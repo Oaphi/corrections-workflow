@@ -51,6 +51,14 @@ const doGet = ({ parameter }: GoogleAppsScript.Events.DoGet) => {
     }
 
     if (path === "manage") {
+        const folderId = store.getProperty("storage_root_folder_id");
+
+        if (!folderId) {
+            return ContentService.createTextOutput(
+                "Manage route is misconfigured"
+            );
+        }
+
         return getManageRoute({ folderId });
     }
 

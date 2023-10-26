@@ -1,11 +1,13 @@
-const folderId = "1rEwHBw4OSJ9H72kpdZh2KQA9Fsu5PyuF";
-
 const processedItemsKey = "processed_items";
 const newItemsTriggerDisabledKey = "new_items_trigger_disabled";
 const readyItemsTriggerDisabledKey = "ready_items_trigger_disabled";
 
 interface DatabaseConfig {
     id: string;
+}
+
+interface StorageConfig {
+    rootFolderId: string;
 }
 
 interface TrelloConfig {
@@ -31,6 +33,16 @@ const getDatabaseConfig = (): DatabaseConfig => {
 
     return {
         id: props["database_id"],
+    };
+};
+
+const getStorageConfig = (): StorageConfig => {
+    const store = PropertiesService.getScriptProperties();
+
+    const props = store.getProperties();
+
+    return {
+        rootFolderId: props["storage_root_folder_id"],
     };
 };
 
