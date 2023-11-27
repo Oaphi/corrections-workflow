@@ -21,20 +21,26 @@ const handleCardMovedToReview = (action: Trello.WebhookResponse["action"]) => {
         } = display;
 
         const recipient = getReviewRecipient();
-        if (!recipient) return;
+        if (!recipient) {
+            console.log("[webhook:review] missing email recipient");
+            return;
+        }
 
         const subject = `[готово к ревью] ${text}`;
 
         const card = getTrelloCard(id);
-        if (!card) return;
+        if (!card) {
+            console.log("[webhook:review] missing Trello card");
+            return;
+        }
 
         const [docURL] = getGDocLinksFromCard(card);
 
         const { name } = card;
 
         const docName = docURL
-        ? `<a href="${docURL}" target="_blank">"${name}"</a>`
-        : `"${name}"`;
+            ? `<a href="${docURL}" target="_blank">"${name}"</a>`
+            : `"${name}"`;
 
         GmailApp.sendEmail(recipient, subject, "", {
             htmlBody: `
@@ -42,6 +48,6 @@ const handleCardMovedToReview = (action: Trello.WebhookResponse["action"]) => {
 ${makeEmailSignature()}`,
         });
     } catch (error) {
-        console.log(`[webhook]\n${error}`);
+        console.log(`[webhook:review]\n${error}`);
     }
 };

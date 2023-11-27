@@ -47,6 +47,7 @@ const doGet = ({ parameter }: GoogleAppsScript.Events.DoGet) => {
     const store = PropertiesService.getScriptProperties();
     const pass = store.getProperty("app_pwd");
     if (pwd !== pass) {
+        console.log(`[webapp] unauthorized access on path "${path}"`);
         return ContentService.createTextOutput("Unauthorized");
     }
 

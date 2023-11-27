@@ -35,21 +35,21 @@ const handleCardMovedToDone = (action: Trello.WebhookResponse["action"]) => {
         const card = getTrelloCard(cardId);
 
         if (!card) {
-            console.log(`[webhook] card "${cardName}" doesn't exist`);
+            console.log(`[webhook:done] card "${cardName}" doesn't exist`);
             return;
         }
 
         const links = getGDocLinksFromCard(card);
 
         if (!links.length) {
-            console.log(`[webhook] no GDocs links found in "${cardName}" card`);
+            console.log(`[webhook:done] no GDocs links in "${cardName}" card`);
         }
 
         const db = SpreadsheetApp.openById(databaseId);
 
         const table = db.getSheetByName("Items");
         if (!table) {
-            console.log(`[webhook] no done items DB (${databaseId})`);
+            console.log(`[webhook:done] no done items DB (${databaseId})`);
             return;
         }
 
@@ -74,6 +74,6 @@ const handleCardMovedToDone = (action: Trello.WebhookResponse["action"]) => {
 
         newRows.setValues(newRowValues);
     } catch (error) {
-        console.log(`[webhook]\n${error}`);
+        console.log(`[webhook:done]\n${error}`);
     }
 };

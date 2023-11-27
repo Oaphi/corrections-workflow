@@ -21,12 +21,18 @@ const handleCardMovedToProgress = (
         } = display;
 
         const recipient = getReviewRecipient();
-        if (!recipient) return;
+        if (!recipient) {
+            console.log("[webhook:progress] missing email recipient");
+            return;
+        }
 
         const subject = `[в работе] ${text}`;
 
         const card = getTrelloCard(id);
-        if (!card) return;
+        if (!card) {
+            console.log("[webhook:progress] missing Trello card");
+            return;
+        }
 
         const [docURL] = getGDocLinksFromCard(card);
 
@@ -42,6 +48,6 @@ const handleCardMovedToProgress = (
 ${makeEmailSignature()}`,
         });
     } catch (error) {
-        console.log(`[webhook]\n${error}`);
+        console.log(`[webhook:progress]\n${error}`);
     }
 };
